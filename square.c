@@ -64,7 +64,8 @@ getoutputref(const char *sym_name, symTableElement *tab)
 #define WHEEL_SEPARATION 0.26  /* m */
 #define DELTA_M (M_PI * WHEEL_DIAMETER / 2000)
 #define ROBOTPORT 8000 //24902
-# define MAXINT 65536
+#define MAXINT 65536
+#define TIMETIC 0.005
 
 typedef struct
 {							 //input signals
@@ -507,7 +508,7 @@ void update_motcon(motiontype *p){
 	case mot_move:
 		driven_dist = (p->right_pos + p->left_pos) / 2 - p->startpos; 
 		d = p->dist - driven_dist; 						// remaining distance
-		clock_acceleration = max_acceleration * 0.010; // Incremental speed/program run
+		clock_acceleration = max_acceleration * TIMETIC; // Incremental speed/program run
 		if ((deaccel_flag) || (p->currentspeed >= sqrt(2 * max_acceleration * d))){ /// We need to deaccelerate
 			if (!deaccel_flag){
 				printf("The flag has been hoisted!\n");
