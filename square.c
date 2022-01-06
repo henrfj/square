@@ -322,36 +322,38 @@ int main()
 		switch (mission.state)
 		{
 		case ms_init:
-			n = 1; //4
+			n = 4; //4
 			dist = 2;
 			speed = 0.2; // 0.2 0.4 0.6
 			// angle = 90.0 / 180 * M_PI; // CW
 			//angle = -90.0 / 180 * M_PI; //CCW
-			angle = 90;
-			control_angle = 45;
-			mission.state = ms_turn;
+			angle = 90 * M_PI/180;
+			control_angle = 45 * M_PI/180;
+			mission.state = ms_direction_control;
 			break;
 
 		case ms_fwd:
-			printf("ms_fwd!\n");
+			//printf("ms_fwd!\n");
 			if (fwd(dist, speed, mission.time))
 				//mission.state = ms_turn;
-				mission.state = ms_direction_control;
+				//mission.state = ms_direction_control;
+				mission.state = ms_end;
+
 			break;
 
 		case ms_direction_control:
-			printf("ms_direction_control!\n");
+			//printf("ms_direction_control!\n");
 			if (dc(control_angle, mission.time))
 				mission.state = ms_end;
 			break;
 
 		case ms_turn:
-			printf("ms_turn!\n");
+			//printf("ms_turn!\n");
 			if (turn(angle, speed, mission.time))
 			{
 				n = n - 1;
 				if (n == 0)
-					mission.state = ms_fwd; //ms_end
+					mission.state = ms_end; //ms_end
 				else
 					mission.state = ms_fwd;
 			}
@@ -620,7 +622,7 @@ void update_motcon(motiontype *p, odotype *o){
 		}
 
 		// we assume the input angle is also between +-180 degree.
-		double dV = 0.05 * (p->angle - target_angle);
+		double dV = 25 * (p->angle - target_angle);
 		
 		if (p->angle > target_angle){ 		// Left turn
 			p->motorspeed_l = -dV / 2;
@@ -629,9 +631,10 @@ void update_motcon(motiontype *p, odotype *o){
 			p->motorspeed_l = dV / 2;
 			p->motorspeed_r = -dV / 2;
 		}
-
-		
-		if (((round(p->angle*10)/10)==(round(target_angle*10)/10)) && (p->motorspeed_r <= 0.005) && (p->motorspeed_l <= 0.005)){
+		printf("Difference: %f \t Current: %f \t MOTOR SPEED: %f\n", fabs(p->angle-target_angle), target_angle, dV/2);
+		//((round(p->angle*10)/10)==(round(target_angle*10)/10)) && (p->motorspeed_r <= 0.005) && (p->motorspeed_l <= 0.005)
+		if (fabs(p->angle-target_angle) < (1*M_PI/180)){
+			printf("STOP SPINNING PLEASE :(\n");
 			p->motorspeed_l = 0;
 			p->motorspeed_r = 0;
 			p->finished = 1;
