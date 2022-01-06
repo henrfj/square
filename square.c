@@ -66,6 +66,7 @@ getoutputref(const char *sym_name, symTableElement *tab)
 #define ROBOTPORT 8000 //24902
 #define MAXINT 65536
 #define TIMETIC 0.005
+#define P_GAIN_ANGLE 0.05
 
 typedef struct
 {							 //input signals
@@ -116,13 +117,17 @@ enum
 {
 	mot_stop = 1,
 	mot_move,
-	mot_turn
+	mot_turn,
+	mot_line_follow_control,
+	mot_direction_control	
+	
 };
 
-void update_motcon(motiontype *p);
+void update_motcon(motiontype *p, odotype *o);
 
 int fwd(double dist, double speed, int time);
 int turn(double angle, double speed, int time);
+int dc(double angle, int time);
 
 typedef struct
 {
@@ -146,7 +151,8 @@ enum
 	ms_init,
 	ms_fwd,
 	ms_turn,
-	ms_end
+	ms_end,
+	ms_direction_control
 };
 
 
@@ -171,6 +177,7 @@ int main()
 {
 	int running, n = 0, arg, time = 0;
 	double dist = 0, angle = 0, speed = 0;
+	double control_angle = 0;
 
 	/* Establish connection to robot sensors and actuators.
    */
@@ -315,28 +322,36 @@ int main()
 		switch (mission.state)
 		{
 		case ms_init:
-			n = 4;
+			n = 1; //4
 			dist = 2;
-			speed = 0.6; // 0.2 0.4 0.6
+			speed = 0.2; // 0.2 0.4 0.6
 			// angle = 90.0 / 180 * M_PI; // CW
 			//angle = -90.0 / 180 * M_PI; //CCW
-			angle = 0;
-			mission.state = ms_fwd;
+			angle = 90;
+			control_angle = 45;
+			mission.state = ms_turn;
 			break;
 
 		case ms_fwd:
+			printf("ms_fwd!\n");
 			if (fwd(dist, speed, mission.time))
 				//mission.state = ms_turn;
+				mission.state = ms_direction_control;
+			break;
+
+		case ms_direction_control:
+			printf("ms_direction_control!\n");
+			if (dc(control_angle, mission.time))
 				mission.state = ms_end;
 			break;
 
 		case ms_turn:
-
+			printf("ms_turn!\n");
 			if (turn(angle, speed, mission.time))
 			{
 				n = n - 1;
 				if (n == 0)
-					mission.state = ms_end;
+					mission.state = ms_fwd; //ms_end
 				else
 					mission.state = ms_fwd;
 			}
@@ -351,7 +366,7 @@ int main()
 
 		mot.left_pos = odo.left_pos;
 		mot.right_pos = odo.right_pos;
-		update_motcon(&mot); // motion controller state machine
+		update_motcon(&mot, &odo); // motion controller state machine
 		speedl->data[0] = 100 * mot.motorspeed_l;
 		speedl->updated = 1;
 		speedr->data[0] = 100 * mot.motorspeed_r;
@@ -463,17 +478,17 @@ void update_odo(odotype *p){
 
 }
 // MOTOR STATE MACHINE
-void update_motcon(motiontype *p){
+void update_motcon(motiontype *p, odotype *o){
 	//static double currentspeed = 0; // curren speed of the system
 	double clock_acceleration;
 	double max_acceleration = 0.5;
 	double driven_dist;
 	double d;
 	static int deaccel_flag = 0;
+	double target_angle = 0;
 
 	if (p->cmd != 0)
-	{
-
+	{ // initialize the motor commands
 		p->finished = 0;
 		switch (p->cmd)
 		{
@@ -494,8 +509,11 @@ void update_motcon(motiontype *p){
 				p->startpos = p->left_pos;
 			p->curcmd = mot_turn;
 			break;
-		}
 
+		case mot_direction_control:
+			p->curcmd = mot_direction_control;
+			break;
+		}
 		p->cmd = 0;
 	}
 
@@ -505,10 +523,12 @@ void update_motcon(motiontype *p){
 		p->motorspeed_l = 0;
 		p->motorspeed_r = 0;
 		break;
+
 	case mot_move:
 		driven_dist = (p->right_pos + p->left_pos) / 2 - p->startpos; 
 		d = p->dist - driven_dist; 						// remaining distance
 		clock_acceleration = max_acceleration * TIMETIC; // Incremental speed/program run
+
 		if ((deaccel_flag) || (p->currentspeed >= sqrt(2 * max_acceleration * d))){ /// We need to deaccelerate
 			if (!deaccel_flag){
 				printf("The flag has been hoisted!\n");
@@ -537,7 +557,7 @@ void update_motcon(motiontype *p){
 		printf("Current speed: %f\n", p->currentspeed);	
 		break;
 
-	case mot_turn:
+	case mot_turn: // HERE WE ALREADY KNOW OUR DESIRED ANGLE!
 		// This will make a hard turn
 		if (p->angle > 0) //Left turn
 
@@ -580,6 +600,55 @@ void update_motcon(motiontype *p){
 		}
 
 		break;
+
+	case mot_line_follow_control:
+		/*Follow a line*/ 
+		break;
+	
+	case mot_direction_control:
+		/* 
+		know direction but not the angle. Does the same as the turn, 
+		but with the turn you give a relative angle - now we get an absolute angle.  
+		
+		p->angle = reference angle, o->theta = target angle.
+		*/
+
+		// make the current/target angle into a +-180 degree angle.
+		target_angle = fmod(o->theta,(2*M_PI));
+		if (target_angle > M_PI){ 
+			target_angle -= 2*M_PI;
+		}
+
+		// we assume the input angle is also between +-180 degree.
+		double dV = 0.05 * (p->angle - target_angle);
+		
+		if (p->angle > target_angle){ 		// Left turn
+			p->motorspeed_l = -dV / 2;
+			p->motorspeed_r = dV / 2;
+		}else{ 							// Right turn
+			p->motorspeed_l = dV / 2;
+			p->motorspeed_r = -dV / 2;
+		}
+
+		
+		if (((round(p->angle*10)/10)==(round(target_angle*10)/10)) && (p->motorspeed_r <= 0.005) && (p->motorspeed_l <= 0.005)){
+			p->motorspeed_l = 0;
+			p->motorspeed_r = 0;
+			p->finished = 1;
+		}
+
+		break;
+	}
+}
+
+
+int dc(double angle, int time){
+	if (time == 0){
+		mot.cmd = mot_direction_control;
+		mot.angle = angle;
+		return 0;
+	}else{
+		return mot.finished;
 	}
 }
 

@@ -1,0 +1,17 @@
+{
+    "files.associations": {
+        "array": "c",
+        "bitset": "c",
+        "deque": "c",
+        "string": "c",
+        "vector": "c",
+        "iterator": "c",
+        "string_view": "c",
+        "initializer_list": "c",
+        "unordered_map": "c",
+        "tuple": "c",
+        "functional": "c",
+        "chrono": "c",
+        "cmath": "c"
+    }
+}
