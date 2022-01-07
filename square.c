@@ -663,11 +663,21 @@ void update_motcon(motiontype *p, odotype *o){
 		linesensor_normalizer(odo.linesensor);
 
 		// 2 - do the simple lowest intensity algorithm "fl"
-		int line_index;
-		line_index = lowest_intensity(odo.linesensor, 0);
-		dV = 0.1 * (3.5 - line_index);
 
-		printf("dV: %f \t line_index: %d |||||| \t %d \t %d\t %d\t %d\t %d\t %d\t %d\t %d\n", dV, line_index,
+		
+		// IF you want to hug the side
+		/*
+		int line_index;
+		line_index = lowest_intensity(odo.linesensor, 0); // 1 for left 0 for right
+		dV = 0.1 * (3.5 - line_index);
+		*/
+
+		float cg;
+		cg = center_of_gravity(odo.linesensor);
+		dV = 0.1 * (3.5 - cg);
+
+
+		printf("dV: %f \t cg: %f |||||| \t %d \t %d\t %d\t %d\t %d\t %d\t %d\t %d\n", dV, cg,
 		 odo.linesensor[0], odo.linesensor[1], odo.linesensor[2], odo.linesensor[3], odo.linesensor[4], odo.linesensor[5], odo.linesensor[6], odo.linesensor[7]);
 
 		// 3 - Calulcate remaining distance.
@@ -682,7 +692,7 @@ void update_motcon(motiontype *p, odotype *o){
 			p->finished = 1;
 		}
 
-		// TODO: what if there is no more line?
+		// TODO: what if there is no more line? --- fix it
 
 		break;
 	
