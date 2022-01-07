@@ -354,7 +354,7 @@ int main()
 		case ms_init:
 			n = 1; //4
 			m = 1;
-			dist = 20;
+			dist = 2;
 			speed = 0.2; // 0.2 0.4 0.6
 			// angle = 90.0 / 180 * M_PI; // CW
 			//angle = -90.0 / 180 * M_PI; //CCW
@@ -370,7 +370,6 @@ int main()
 				//mission.state = ms_turn;
 				//mission.state = ms_direction_control;
 				mission.state = ms_direction_control;
-
 			break;
 
 		case ms_followline:
@@ -668,16 +667,16 @@ void update_motcon(motiontype *p, odotype *o){
 		// IF you want to hug the side
 		/*
 		int line_index;
-		line_index = lowest_intensity(odo.linesensor, 0); // 1 for left 0 for right
+		line_index = lowest_intensity(odo.linesensor, 1); // 1 for left 0 for right
 		dV = 0.1 * (3.5 - line_index);
+		printf("dV: %f \t line_index: %d |||||| \t %d \t %d\t %d\t %d\t %d\t %d\t %d\t %d\n", dV, line_index,
+		 odo.linesensor[0], odo.linesensor[1], odo.linesensor[2], odo.linesensor[3], odo.linesensor[4], odo.linesensor[5], odo.linesensor[6], odo.linesensor[7]);
 		*/
 
 		// center of gravity
 		float cg;
 		cg = center_of_gravity(odo.linesensor);
 		dV = 0.1 * (3.5 - cg);
-
-
 		printf("dV: %f \t cg: %f |||||| \t %d \t %d\t %d\t %d\t %d\t %d\t %d\t %d\n", dV, cg,
 		 odo.linesensor[0], odo.linesensor[1], odo.linesensor[2], odo.linesensor[3], odo.linesensor[4], odo.linesensor[5], odo.linesensor[6], odo.linesensor[7]);
 
