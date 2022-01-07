@@ -65,7 +65,7 @@ getoutputref(const char *sym_name, symTableElement *tab)
 #define DELTA_M (M_PI * WHEEL_DIAMETER / 2000)
 #define ROBOTPORT 8000 //24902
 #define MAXINT 65536
-#define TIMETIC 0.005
+#define TIMETIC 0.01
 #define P_GAIN_ANGLE 0.05
 
 typedef struct
@@ -323,15 +323,15 @@ int main()
 		{
 		case ms_init:
 			n = 1; //4
-			m = 2;
+			m = 1;
 			dist = 2;
-			speed = 0.2; // 0.2 0.4 0.6
+			speed = 0.6; // 0.2 0.4 0.6
 			// angle = 90.0 / 180 * M_PI; // CW
 			//angle = -90.0 / 180 * M_PI; //CCW
 			angle = 149 * M_PI/180;
-			control_angle = -120 * M_PI/180;
+			control_angle = -145 * M_PI/180;
 			//mission.state = ms_direction_control;
-			mission.state = ms_fwd;
+			mission.state = ms_direction_control;
 			break;
 
 		case ms_fwd:
@@ -399,15 +399,15 @@ int main()
 		}
 		
 		clock_t current_time = clock();
-		double time_spent = (double)(current_time - start_time) / 10000;
+		double time_spent = (double)(current_time - start_time) / 5000; //TODO: use time() function instead
 
-		logg[log_index][0] = mission.time;
-		logg[log_index][1] = mot.motorspeed_l;
-		logg[log_index][2] = mot.motorspeed_r;
-		logg[log_index][3] = time_spent;
-		logg[log_index][4] = odo.x_pos;
-		logg[log_index][5] = odo.y_pos;
-		logg[log_index][6] = odo.theta;
+		logg[log_index][0] = mission.time; 		// no. tics for the current mission.
+		logg[log_index][1] = mot.motorspeed_l;	// 
+		logg[log_index][2] = mot.motorspeed_r;	//
+		logg[log_index][3] = time_spent;		// "time spent" - using clock and a no. pulled out of our asses.
+		logg[log_index][4] = odo.x_pos;			// x pos of robot
+		logg[log_index][5] = odo.y_pos;			// y pos of robot
+		logg[log_index][6] = odo.theta;			// absolute theta of robot
 		log_index++;
 
 	} /* end of main control loop */
@@ -639,8 +639,8 @@ void update_motcon(motiontype *p, odotype *o){
 			angle_diff-=2*M_PI;
 		}
 
-
-		double dV = 0.5 * (angle_diff); //2.125
+		// speed levels: 0.1, 0.25, 0.5
+		double dV = 0.1 * (angle_diff); //2.125
 
 
 		// So the motor voltage is still operational
