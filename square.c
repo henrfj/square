@@ -139,7 +139,7 @@ int fol_dist(double dist,double speed, int time);
 
 void linesensor_normalizer(int  linedata[8]);
 float center_of_gravity(int linedata[8]);
-int lowest_intensity(int linedata[8]);
+int lowest_intensity(int linedata[8], char followleft);
 
 typedef struct
 {
@@ -664,7 +664,7 @@ void update_motcon(motiontype *p, odotype *o){
 
 		// 2 - do the simple lowest intensity algorithm "fl"
 		int line_index;
-		line_index = lowest_intensity(odo.linesensor);
+		line_index = lowest_intensity(odo.linesensor, 0);
 		dV = 0.1 * (3.5 - line_index);
 
 		printf("dV: %f \t line_index: %d |||||| \t %d \t %d\t %d\t %d\t %d\t %d\t %d\t %d\n", dV, line_index,
@@ -758,7 +758,7 @@ void linesensor_normalizer(int linedata[8]){
 	}
 }
 
-int lowest_intensity(int linedata[8]){
+int lowest_intensity(int linedata[8], char followleft){
 	/* Not assuming boolean values.
 	NB! linedata is from right to left.
 
@@ -769,9 +769,16 @@ int lowest_intensity(int linedata[8]){
 	double lowest_value = 1;
 	int center_index = 0;
 	for (int i = 0; i < 8; i ++){
-		if (linedata[i] <= lowest_value){ 
-			lowest_value = linedata[i];
-			center_index = i;
+		if (followleft){
+			if (linedata[i] <= lowest_value){ 
+				lowest_value = linedata[i];
+				center_index = i;
+			}
+		} else{
+			if (linedata[i] < lowest_value){ 
+				lowest_value = linedata[i];
+				center_index = i;
+			}
 		}
 	}
 	return center_index;
