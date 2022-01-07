@@ -67,6 +67,8 @@ getoutputref(const char *sym_name, symTableElement *tab)
 #define MAXINT 65536
 #define TIMETIC 0.01
 #define P_GAIN_ANGLE 0.05
+#define MAXIR 
+#define MINIR
 
 typedef struct
 {							 //input signals
@@ -127,7 +129,8 @@ void update_motcon(motiontype *p, odotype *o);
 
 int fwd(double dist, double speed, int time);
 int turn(double angle, double speed, int time);
-int dc(double angle, int time);
+int dc(double dist, double speed, double angle, int time);
+//double linesensor_normalizer(float linedata[8]);
 
 typedef struct
 {
@@ -277,8 +280,11 @@ int main()
 	odo.cl = odo.cr;
 	odo.left_enc = lenc->data[0];
 	odo.right_enc = renc->data[0];
+
 	reset_odo(&odo);
-	printf("position: %f, %f\n", odo.left_pos, odo.right_pos);
+
+	//printf("position: %f, %f\n", odo.left_pos, odo.right_pos);
+
 	mot.w = odo.w;
 	mot.currentspeed = 0;
 	running = 1;
@@ -310,9 +316,12 @@ int main()
 				xml_proc(xmldata);
 		}
 
-		rhdSync();
+		rhdSync(); // updates the HW sensor data
+
 		odo.left_enc = lenc->data[0];
 		odo.right_enc = renc->data[0];
+		// here we need to update the linesensor data as well
+
 		update_odo(&odo);
 
 		/****************************************
@@ -325,11 +334,11 @@ int main()
 			n = 1; //4
 			m = 1;
 			dist = 2;
-			speed = 0.6; // 0.2 0.4 0.6
+			speed = 0.2; // 0.2 0.4 0.6
 			// angle = 90.0 / 180 * M_PI; // CW
 			//angle = -90.0 / 180 * M_PI; //CCW
 			angle = 149 * M_PI/180;
-			control_angle = -145 * M_PI/180;
+			control_angle = 75 * M_PI/180;
 			//mission.state = ms_direction_control;
 			mission.state = ms_direction_control;
 			break;
@@ -345,14 +354,14 @@ int main()
 
 		case ms_direction_control:
 			//printf("ms_direction_control!\n");
-			if (dc(control_angle, mission.time))
-				{
+			if (dc(dist, speed, control_angle, mission.time)){
 				m = m - 1;
-				if (m == 0)
+				if (m == 0){
 					mission.state = ms_end; 
-				else
-					mission.state = ms_turn;
+				}else{
+					mission.state = ms_fwd;
 				}
+			}
 			break;
 
 		case ms_turn:
@@ -521,14 +530,14 @@ void update_motcon(motiontype *p, odotype *o){
 			break;
 
 		case mot_direction_control:
+			p->startpos = (p->left_pos + p->right_pos) / 2;
 			p->curcmd = mot_direction_control;
 			break;
 		}
 		p->cmd = 0;
 	}
 
-	switch (p->curcmd)
-	{
+	switch (p->curcmd){
 	case mot_stop:
 		p->motorspeed_l = 0;
 		p->motorspeed_r = 0;
@@ -608,7 +617,6 @@ void update_motcon(motiontype *p, odotype *o){
 				p->finished = 1;
 			}
 		}
-
 		break;
 
 	case mot_line_follow_control:
@@ -616,7 +624,10 @@ void update_motcon(motiontype *p, odotype *o){
 		break;
 	
 	case mot_direction_control:
-		/* 
+		/*
+
+		TODO: give the forward motion some acceleration.
+
 		know direction but not the angle. Does the same as the turn, 
 		but with the turn you give a relative angle - now we get an absolute angle.  
 		
@@ -656,24 +667,37 @@ void update_motcon(motiontype *p, odotype *o){
 		p->motorspeed_l = -dV / 2;
 		p->motorspeed_r = dV / 2;
 
-		printf("Difference: %f \t Current: %f \t RMOTOR SPEED: %f\n", fabs(p->angle-current_angle)*180/M_PI, current_angle*180/M_PI, dV/2);
-		//((round(p->angle*10)/10)==(round(current_angle*10)/10)) && (p->motorspeed_r <= 0.005) && (p->motorspeed_l <= 0.005)
-		// && (fabs(p->motorspeed_r) <= 0.01) && (fabs(p->motorspeed_l) <= 0.01)
-		if (fabs(p->angle-current_angle) < (0.1*M_PI/180) && (fabs(p->motorspeed_r) == sm) && (fabs(p->motorspeed_l) == sm)){
-			printf("STOP SPINNING PLEASE :(\n");
-			p->motorspeed_l = 0;
-			p->motorspeed_r = 0;
-			p->finished = 1;
+		//printf("Difference: %f \t Current: %f \t RMOTOR SPEED: %f\n", fabs(p->angle-current_angle)*180/M_PI, current_angle*180/M_PI, dV/2);
+		// && (fabs(p->motorspeed_r) == sm) && (fabs(p->motorspeed_l) == sm)
+		if (fabs(p->angle-current_angle) < (0.1*M_PI/180)){
+			//printf("STOP SPINNING PLEASE :(\n");
+			driven_dist = (p->right_pos + p->left_pos) / 2 - p->startpos; 
+			d = p->dist - driven_dist; 						// remaining distance
+			printf("Driven_distance = %f \t Startpos = %f \t p->dist = %f \t d = %f \n", driven_dist, p->startpos, p->dist, d);
+			if (d>0){
+				p->motorspeed_l = p->speedcmd;
+				p->motorspeed_r = p->speedcmd;
+			}else{
+				p->motorspeed_l = 0;
+				p->motorspeed_r = 0;
+				p->finished = 1;
+			}
 		}
 		break;
 	}
 }
 
+//double linesensor_normalizer(double linedata[8]){
+//	return 0.1;
+//}
 
-int dc(double angle, int time){
+
+int dc(double dist, double speed, double angle, int time){
 	if (time == 0){
 		mot.cmd = mot_direction_control;
 		mot.angle = angle;
+		mot.speedcmd = speed;
+		mot.dist = dist;
 		return 0;
 	}else{
 		return mot.finished;
