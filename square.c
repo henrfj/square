@@ -89,6 +89,8 @@ typedef struct
 	double theta;
 	// Linesensor array
 	int linesensor[8];
+	// total distance traveled
+	double traveldist;
 } odotype;
 
 typedef struct
@@ -327,7 +329,6 @@ int main()
 
 		odo.left_enc = lenc->data[0];
 		odo.right_enc = renc->data[0];
-		// here we need to update the linesensor data as well
 		memcpy(odo.linesensor, linesensor->data, sizeof(odo.linesensor));
 		
 		/*
@@ -341,6 +342,9 @@ int main()
 		printf("=> %d\n", line_index);
 		*/
 
+		// the rest of the odo updates
+		update_odo(&odo);
+
 		/****************************************
 		/ mission statemachine   
 		****************************************/
@@ -350,14 +354,14 @@ int main()
 		case ms_init:
 			n = 1; //4
 			m = 1;
-			dist = 2;
-			speed = 0.6; // 0.2 0.4 0.6
+			dist = 1.5;
+			speed = 0.2; // 0.2 0.4 0.6
 			// angle = 90.0 / 180 * M_PI; // CW
 			//angle = -90.0 / 180 * M_PI; //CCW
 			angle = 149 * M_PI/180;
 			control_angle = 75 * M_PI/180;
 			//mission.state = ms_direction_control;
-			mission.state = ms_direction_control;
+			mission.state = ms_followline;
 			break;
 
 		case ms_fwd:
@@ -415,6 +419,7 @@ int main()
 		speedl->updated = 1;
 		speedr->data[0] = 100 * mot.motorspeed_r;
 		speedr->updated = 1;
+		
 		if (time % 100 == 0)
 			//    printf(" laser %f \n",laserpar[3]);
 			time++;
@@ -475,6 +480,7 @@ void reset_odo(odotype *p){
 	p->y_pos = 0;
 	p->theta = 0;
 	//
+	p->traveldist = 0;
 }
 
 void update_odo(odotype *p){
@@ -507,6 +513,8 @@ void update_odo(odotype *p){
 
 	// 2 - The incremental displacement of the robot center point delta U[i]
 	float dU = (p->dUR + p->dUL)/2;
+	p->traveldist += dU;
+	//printf("traveldist: %f\n", p->traveldist);
 
 	// 3 - The incremental change in orientation delta theta[i]
 	float dtheta = (p->dUR - p->dUL) / WHEEL_SEPARATION;
@@ -518,8 +526,6 @@ void update_odo(odotype *p){
 	
 	//printf("Position: (%f %f %f) \n", p->x_pos, p->y_pos, p->theta);
 
-
-
 }
 // MOTOR STATE MACHINE
 void update_motcon(motiontype *p, odotype *o){
@@ -530,6 +536,7 @@ void update_motcon(motiontype *p, odotype *o){
 	double d;
 	static int deaccel_flag = 0;
 	double current_angle = 0;
+	double dV;
 
 	if (p->cmd != 0)
 	{ // initialize the motor commands
@@ -560,6 +567,7 @@ void update_motcon(motiontype *p, odotype *o){
 			break;
 		
 		case mot_line_follow:
+				o->traveldist = 0;
 				p->curcmd = mot_line_follow;
 			break;
 		}
@@ -651,13 +659,30 @@ void update_motcon(motiontype *p, odotype *o){
 	case mot_line_follow:
 		/*Follow a line*/
 
-		// Step one, normalize the incomming data
+		// 1 - normalize the incomming data
 		linesensor_normalizer(odo.linesensor);
 
-		// Step two, do the simple lowest intensity algorithm "fl"
+		// 2 - do the simple lowest intensity algorithm "fl"
 		int line_index;
 		line_index = lowest_intensity(odo.linesensor);
+		dV = 0.1 * (3.5 - line_index);
 
+		printf("dV: %f \t line_index: %d |||||| \t %d \t %d\t %d\t %d\t %d\t %d\t %d\t %d\n", dV, line_index,
+		 odo.linesensor[0], odo.linesensor[1], odo.linesensor[2], odo.linesensor[3], odo.linesensor[4], odo.linesensor[5], odo.linesensor[6], odo.linesensor[7]);
+
+		// 3 - Calulcate remaining distance.
+		d = p->dist - o->traveldist; 						
+		
+		if (d>0){
+			p->motorspeed_l = p->speedcmd + dV / 2;
+			p->motorspeed_r = p->speedcmd - dV / 2;
+		}else{
+			p->motorspeed_l = 0;
+			p->motorspeed_r = 0;
+			p->finished = 1;
+		}
+
+		// TODO: what if there is no more line?
 
 		break;
 	
@@ -689,7 +714,7 @@ void update_motcon(motiontype *p, odotype *o){
 		}
 
 		// speed levels: 0.1, 0.25, 0.5
-		double dV = 0.1 * (angle_diff); //2.125
+		dV = 0.1 * (angle_diff); //2.125
 
 
 		// So the motor voltage is still operational
@@ -735,14 +760,16 @@ void linesensor_normalizer(int linedata[8]){
 
 int lowest_intensity(int linedata[8]){
 	/* Not assuming boolean values.
+	NB! linedata is from right to left.
+
 	If boolean it will just return the first/last index it finds.
-	If we use linedata[i] < lowest_value we get "follow left", if we use <= we get "follow right"
+	If we use linedata[i] <= lowest_value we get "follow left", if we use < we get "follow right"
 	*/ 
 
 	double lowest_value = 1;
 	int center_index = 0;
 	for (int i = 0; i < 8; i ++){
-		if (linedata[i] < lowest_value){ 
+		if (linedata[i] <= lowest_value){ 
 			lowest_value = linedata[i];
 			center_index = i;
 		}
