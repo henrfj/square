@@ -175,7 +175,7 @@ void write_log(double log[MAXINT][7]) //here
 
 int main()
 {
-	int running, n = 0, arg, time = 0;
+	int running, n = 0, arg, time = 0, m = 0;
 	double dist = 0, angle = 0, speed = 0;
 	double control_angle = 0;
 
@@ -322,14 +322,16 @@ int main()
 		switch (mission.state)
 		{
 		case ms_init:
-			n = 4; //4
+			n = 1; //4
+			m = 2;
 			dist = 2;
 			speed = 0.2; // 0.2 0.4 0.6
 			// angle = 90.0 / 180 * M_PI; // CW
 			//angle = -90.0 / 180 * M_PI; //CCW
-			angle = 90 * M_PI/180;
-			control_angle = 45 * M_PI/180;
-			mission.state = ms_direction_control;
+			angle = 149 * M_PI/180;
+			control_angle = -120 * M_PI/180;
+			//mission.state = ms_direction_control;
+			mission.state = ms_fwd;
 			break;
 
 		case ms_fwd:
@@ -337,14 +339,20 @@ int main()
 			if (fwd(dist, speed, mission.time))
 				//mission.state = ms_turn;
 				//mission.state = ms_direction_control;
-				mission.state = ms_end;
+				mission.state = ms_direction_control;
 
 			break;
 
 		case ms_direction_control:
 			//printf("ms_direction_control!\n");
 			if (dc(control_angle, mission.time))
-				mission.state = ms_end;
+				{
+				m = m - 1;
+				if (m == 0)
+					mission.state = ms_end; 
+				else
+					mission.state = ms_turn;
+				}
 			break;
 
 		case ms_turn:
@@ -353,7 +361,7 @@ int main()
 			{
 				n = n - 1;
 				if (n == 0)
-					mission.state = ms_end; //ms_end
+					mission.state = ms_direction_control; //ms_end
 				else
 					mission.state = ms_fwd;
 			}
@@ -487,7 +495,7 @@ void update_motcon(motiontype *p, odotype *o){
 	double driven_dist;
 	double d;
 	static int deaccel_flag = 0;
-	double target_angle = 0;
+	double current_angle = 0;
 
 	if (p->cmd != 0)
 	{ // initialize the motor commands
@@ -616,30 +624,47 @@ void update_motcon(motiontype *p, odotype *o){
 		*/
 
 		// make the current/target angle into a +-180 degree angle.
-		target_angle = fmod(o->theta,(2*M_PI));
-		if (target_angle > M_PI){ 
-			target_angle -= 2*M_PI;
+		current_angle = fmod(o->theta,(2*M_PI));
+		if (current_angle > M_PI){ 
+			current_angle -= 2*M_PI;
 		}
 
 		// we assume the input angle is also between +-180 degree.
-		double dV = 25 * (p->angle - target_angle);
+		double angle_diff;
+		angle_diff = p->angle - current_angle;
 		
-		if (p->angle > target_angle){ 		// Left turn
-			p->motorspeed_l = -dV / 2;
-			p->motorspeed_r = dV / 2;
-		}else{ 							// Right turn
-			p->motorspeed_l = dV / 2;
-			p->motorspeed_r = -dV / 2;
+		if (angle_diff < -M_PI){
+			angle_diff+=2*M_PI;
+		}else if(angle_diff > M_PI){
+			angle_diff-=2*M_PI;
 		}
-		printf("Difference: %f \t Current: %f \t MOTOR SPEED: %f\n", fabs(p->angle-target_angle), target_angle, dV/2);
-		//((round(p->angle*10)/10)==(round(target_angle*10)/10)) && (p->motorspeed_r <= 0.005) && (p->motorspeed_l <= 0.005)
-		if (fabs(p->angle-target_angle) < (1*M_PI/180)){
+
+
+		double dV = 0.5 * (angle_diff); //2.125
+
+
+		// So the motor voltage is still operational
+		double sm = 0.01;
+		if (fabs(dV/2) < sm){
+			if (dV<0){
+				dV = -2 * sm;
+			}else{
+				dV = 2 * sm;
+			}	
+		}
+
+		p->motorspeed_l = -dV / 2;
+		p->motorspeed_r = dV / 2;
+
+		printf("Difference: %f \t Current: %f \t RMOTOR SPEED: %f\n", fabs(p->angle-current_angle)*180/M_PI, current_angle*180/M_PI, dV/2);
+		//((round(p->angle*10)/10)==(round(current_angle*10)/10)) && (p->motorspeed_r <= 0.005) && (p->motorspeed_l <= 0.005)
+		// && (fabs(p->motorspeed_r) <= 0.01) && (fabs(p->motorspeed_l) <= 0.01)
+		if (fabs(p->angle-current_angle) < (0.1*M_PI/180) && (fabs(p->motorspeed_r) == sm) && (fabs(p->motorspeed_l) == sm)){
 			printf("STOP SPINNING PLEASE :(\n");
 			p->motorspeed_l = 0;
 			p->motorspeed_r = 0;
 			p->finished = 1;
 		}
-
 		break;
 	}
 }
