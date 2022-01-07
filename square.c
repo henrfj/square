@@ -761,7 +761,7 @@ void update_motcon(motiontype *p, odotype *o){
 
 void linesensor_normalizer(int linedata[8]){
 	for (int i = 0; i < 8; i ++){
-		linedata[i] = (linedata[i]-MINLINE) / (MAXLINE);
+		linedata[i] = (linedata[i] - MINLINE) / (MAXLINE - MINLINE);
 		// Boolan values
 		if (linedata[i]>0.5){linedata[i]=1;}
 		else{linedata[i] = 0;}
