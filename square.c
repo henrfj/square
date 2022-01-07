@@ -67,8 +67,8 @@ getoutputref(const char *sym_name, symTableElement *tab)
 #define MAXINT 65536
 #define TIMETIC 0.01
 #define P_GAIN_ANGLE 0.05
-#define MAXIR 
-#define MINIR
+#define MAXLINE 128
+#define MINLINE 0
 
 typedef struct
 {							 //input signals
@@ -87,6 +87,8 @@ typedef struct
 	double x_pos, y_pos;
 	// angle variable
 	double theta;
+	// Linesensor array
+	int linesensor[8];
 } odotype;
 
 typedef struct
@@ -120,8 +122,8 @@ enum
 	mot_stop = 1,
 	mot_move,
 	mot_turn,
-	mot_line_follow_control,
-	mot_direction_control	
+	mot_direction_control,
+	mot_line_follow
 	
 };
 
@@ -130,7 +132,12 @@ void update_motcon(motiontype *p, odotype *o);
 int fwd(double dist, double speed, int time);
 int turn(double angle, double speed, int time);
 int dc(double dist, double speed, double angle, int time);
-//double linesensor_normalizer(float linedata[8]);
+int fol_dist(double dist,double speed, int time);
+
+
+void linesensor_normalizer(int  linedata[8]);
+float center_of_gravity(int linedata[8]);
+int lowest_intensity(int linedata[8]);
 
 typedef struct
 {
@@ -155,7 +162,8 @@ enum
 	ms_fwd,
 	ms_turn,
 	ms_end,
-	ms_direction_control
+	ms_direction_control,
+	ms_followline
 };
 
 
@@ -280,10 +288,9 @@ int main()
 	odo.cl = odo.cr;
 	odo.left_enc = lenc->data[0];
 	odo.right_enc = renc->data[0];
-
+	// linesensor
+	memcpy(odo.linesensor, linesensor->data, sizeof(odo.linesensor));
 	reset_odo(&odo);
-
-	//printf("position: %f, %f\n", odo.left_pos, odo.right_pos);
 
 	mot.w = odo.w;
 	mot.currentspeed = 0;
@@ -321,8 +328,18 @@ int main()
 		odo.left_enc = lenc->data[0];
 		odo.right_enc = renc->data[0];
 		// here we need to update the linesensor data as well
-
-		update_odo(&odo);
+		memcpy(odo.linesensor, linesensor->data, sizeof(odo.linesensor));
+		
+		/*
+		linesensor_normalizer(odo.linesensor);
+		int line_index;
+		line_index = lowest_intensity(odo.linesensor);
+		
+		for (int i=0; i<8; i++){
+			printf("%d\t", odo.linesensor[i]);
+		}
+		printf("=> %d\n", line_index);
+		*/
 
 		/****************************************
 		/ mission statemachine   
@@ -334,7 +351,7 @@ int main()
 			n = 1; //4
 			m = 1;
 			dist = 2;
-			speed = 0.2; // 0.2 0.4 0.6
+			speed = 0.6; // 0.2 0.4 0.6
 			// angle = 90.0 / 180 * M_PI; // CW
 			//angle = -90.0 / 180 * M_PI; //CCW
 			angle = 149 * M_PI/180;
@@ -351,6 +368,14 @@ int main()
 				mission.state = ms_direction_control;
 
 			break;
+
+		case ms_followline:
+			if (fol_dist(dist,speed, mission.time))
+				//mission.state = ms_turn;
+				//mission.state = ms_direction_control;
+				mission.state = ms_end;
+			break;
+
 
 		case ms_direction_control:
 			//printf("ms_direction_control!\n");
@@ -533,6 +558,10 @@ void update_motcon(motiontype *p, odotype *o){
 			p->startpos = (p->left_pos + p->right_pos) / 2;
 			p->curcmd = mot_direction_control;
 			break;
+		
+		case mot_line_follow:
+				p->curcmd = mot_line_follow;
+			break;
 		}
 		p->cmd = 0;
 	}
@@ -619,8 +648,17 @@ void update_motcon(motiontype *p, odotype *o){
 		}
 		break;
 
-	case mot_line_follow_control:
-		/*Follow a line*/ 
+	case mot_line_follow:
+		/*Follow a line*/
+
+		// Step one, normalize the incomming data
+		linesensor_normalizer(odo.linesensor);
+
+		// Step two, do the simple lowest intensity algorithm "fl"
+		int line_index;
+		line_index = lowest_intensity(odo.linesensor);
+
+
 		break;
 	
 	case mot_direction_control:
@@ -670,10 +708,9 @@ void update_motcon(motiontype *p, odotype *o){
 		//printf("Difference: %f \t Current: %f \t RMOTOR SPEED: %f\n", fabs(p->angle-current_angle)*180/M_PI, current_angle*180/M_PI, dV/2);
 		// && (fabs(p->motorspeed_r) == sm) && (fabs(p->motorspeed_l) == sm)
 		if (fabs(p->angle-current_angle) < (0.1*M_PI/180)){
-			//printf("STOP SPINNING PLEASE :(\n");
 			driven_dist = (p->right_pos + p->left_pos) / 2 - p->startpos; 
 			d = p->dist - driven_dist; 						// remaining distance
-			printf("Driven_distance = %f \t Startpos = %f \t p->dist = %f \t d = %f \n", driven_dist, p->startpos, p->dist, d);
+			//printf("Driven_distance = %f \t Startpos = %f \t p->dist = %f \t d = %f \n", driven_dist, p->startpos, p->dist, d);
 			if (d>0){
 				p->motorspeed_l = p->speedcmd;
 				p->motorspeed_r = p->speedcmd;
@@ -687,15 +724,62 @@ void update_motcon(motiontype *p, odotype *o){
 	}
 }
 
-//double linesensor_normalizer(double linedata[8]){
-//	return 0.1;
-//}
+void linesensor_normalizer(int linedata[8]){
+	for (int i = 0; i < 8; i ++){
+		linedata[i] = (linedata[i]-MINLINE) / (MAXLINE);
+		// Boolan values
+		if (linedata[i]>0.5){linedata[i]=1;}
+		else{linedata[i] = 0;}
+	}
+}
+
+int lowest_intensity(int linedata[8]){
+	/* Not assuming boolean values.
+	If boolean it will just return the first/last index it finds.
+	If we use linedata[i] < lowest_value we get "follow left", if we use <= we get "follow right"
+	*/ 
+
+	double lowest_value = 1;
+	int center_index = 0;
+	for (int i = 0; i < 8; i ++){
+		if (linedata[i] < lowest_value){ 
+			lowest_value = linedata[i];
+			center_index = i;
+		}
+	}
+	return center_index;
+}
+
+float center_of_gravity(int linedata[8]){
+	// Assuming boolean intensity values
+	// Finds the average index of zero values.
+	int min_index_sum = 0;
+	int min_index_count = 0;
+	for (int i = 0; i < 8; i ++){
+		if (linedata[i] == 0){
+			min_index_sum += i;
+			min_index_count++;
+		}
+	}
+	return min_index_sum/min_index_count;
+}
 
 
 int dc(double dist, double speed, double angle, int time){
 	if (time == 0){
 		mot.cmd = mot_direction_control;
 		mot.angle = angle;
+		mot.speedcmd = speed;
+		mot.dist = dist;
+		return 0;
+	}else{
+		return mot.finished;
+	}
+}
+
+int fol_dist(double dist, double speed, int time){
+	if (time == 0){
+		mot.cmd = mot_line_follow;
 		mot.speedcmd = speed;
 		mot.dist = dist;
 		return 0;
@@ -729,6 +813,9 @@ int turn(double angle, double speed, int time)
 	else
 		return mot.finished;
 }
+
+
+
 
 void sm_update(smtype *p)
 {
