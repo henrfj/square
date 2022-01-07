@@ -354,7 +354,7 @@ int main()
 		case ms_init:
 			n = 1; //4
 			m = 1;
-			dist = 1.5;
+			dist = 20;
 			speed = 0.2; // 0.2 0.4 0.6
 			// angle = 90.0 / 180 * M_PI; // CW
 			//angle = -90.0 / 180 * M_PI; //CCW
@@ -672,6 +672,7 @@ void update_motcon(motiontype *p, odotype *o){
 		dV = 0.1 * (3.5 - line_index);
 		*/
 
+		// center of gravity
 		float cg;
 		cg = center_of_gravity(odo.linesensor);
 		dV = 0.1 * (3.5 - cg);
@@ -795,6 +796,7 @@ int lowest_intensity(int linedata[8], char followleft){
 }
 
 float center_of_gravity(int linedata[8]){
+	//TODO: what happens when the line is lost?
 	// Assuming boolean intensity values
 	// Finds the average index of zero values.
 	int min_index_sum = 0;
@@ -805,7 +807,13 @@ float center_of_gravity(int linedata[8]){
 			min_index_count++;
 		}
 	}
-	return min_index_sum/min_index_count;
+
+	/* One possible solution
+	if (!min_index_count){
+		return 4.5; // lost the line, spin slowly to one side
+	}
+	*/
+	return ((float)min_index_sum)/((float)min_index_count);
 }
 
 
