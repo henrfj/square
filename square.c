@@ -422,9 +422,7 @@ int main()
 		if (time % 100 == 0)
 			//    printf(" laser %f \n",laserpar[3]);
 			time++;
-		/* stop if keyboard is activated
-*
-*/
+		/* stop if keyboard is activated*/
 		ioctl(0, FIONREAD, &arg);
 		if (arg != 0)
 			running = 0;
@@ -665,21 +663,21 @@ void update_motcon(motiontype *p, odotype *o){
 
 		
 		// IF you want to hug the side
-		/*
+		
 		int line_index;
 		line_index = lowest_intensity(odo.linesensor, 1); // 1 for left 0 for right
 		dV = 0.1 * (3.5 - line_index);
-		printf("dV: %f \t line_index: %d |||||| \t %d \t %d\t %d\t %d\t %d\t %d\t %d\t %d\n", dV, line_index,
+		printf("dV: %f \t line_index: %d  \t travel_dist: %f |||||| \t %d \t %d\t %d\t %d\t %d\t %d\t %d\t %d\n", dV, line_index, o->traveldist,
 		 odo.linesensor[0], odo.linesensor[1], odo.linesensor[2], odo.linesensor[3], odo.linesensor[4], odo.linesensor[5], odo.linesensor[6], odo.linesensor[7]);
-		*/
-
+		
+		/*
 		// center of gravity
 		float cg;
 		cg = center_of_gravity(odo.linesensor);
-		dV = 0.1 * (3.5 - cg);
+		dV = 0.1 * (3.5 - cg);S
 		printf("dV: %f \t cg: %f |||||| \t %d \t %d\t %d\t %d\t %d\t %d\t %d\t %d\n", dV, cg,
 		 odo.linesensor[0], odo.linesensor[1], odo.linesensor[2], odo.linesensor[3], odo.linesensor[4], odo.linesensor[5], odo.linesensor[6], odo.linesensor[7]);
-		
+		*/
 
 		// 3 - Calulcate remaining distance.
 		d = p->dist - o->traveldist; 						
