@@ -354,7 +354,7 @@ int main()
 		case ms_init:
 			n = 1; //4
 			m = 1;
-			dist = 2;
+			dist = 20;
 			speed = 0.2; // 0.2 0.4 0.6
 			// angle = 90.0 / 180 * M_PI; // CW
 			//angle = -90.0 / 180 * M_PI; //CCW
@@ -679,6 +679,7 @@ void update_motcon(motiontype *p, odotype *o){
 		dV = 0.1 * (3.5 - cg);
 		printf("dV: %f \t cg: %f |||||| \t %d \t %d\t %d\t %d\t %d\t %d\t %d\t %d\n", dV, cg,
 		 odo.linesensor[0], odo.linesensor[1], odo.linesensor[2], odo.linesensor[3], odo.linesensor[4], odo.linesensor[5], odo.linesensor[6], odo.linesensor[7]);
+		
 
 		// 3 - Calulcate remaining distance.
 		d = p->dist - o->traveldist; 						
@@ -693,6 +694,8 @@ void update_motcon(motiontype *p, odotype *o){
 		}
 
 		// TODO: what if there is no more line? --- fix it
+		// -- follow LEFT/RIGHT will just go in a circle. as line_index will be 0 or 7.
+		// -- CG will go straight, but will actually 
 
 		break;
 	
@@ -807,11 +810,12 @@ float center_of_gravity(int linedata[8]){
 		}
 	}
 
-	/* One possible solution
+	// Avoid dividing by zero.
 	if (!min_index_count){
-		return 4.5; // lost the line, spin slowly to one side
+		//return 4.5; // lost the line, spin slowly to one side
+		return 3.5; // lost the line, go straight
 	}
-	*/
+
 	return ((float)min_index_sum)/((float)min_index_count);
 }
 
