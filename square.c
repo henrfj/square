@@ -185,12 +185,27 @@ void write_log(double log[MAXINT][7]) //here
     fclose(fPtr); // Close file to save file data
 }
 
+void write_laser_log(double laserpar[10]) //here
+{
+	//TODO clear the file before run.
+    FILE * fPtr;
+    fPtr = fopen("/home/smr/offline/square/laserpar.dat", "a"); //a for appending not overwriting
+    if(fPtr == NULL)
+    {
+        printf("Unable to create file.\n"); // File not created hence exit
+    }
+    fprintf(fPtr,"%f %f %f %f %f %f %f %f %f %f\n",
+	   laserpar[0], laserpar[1], laserpar[2], laserpar[3], laserpar[4], laserpar[5], laserpar[6],
+	    laserpar[7], laserpar[8], laserpar[9]); // Write data to file
+   }
+    fclose(fPtr); // Close file to save file data
 
 int main()
 {
 	int running, n = 0, arg, time = 0, m = 0;
 	double dist = 0, angle = 0, speed = 0;
 	double control_angle = 0;
+	remove("/home/smr/offline/square/laserpar.dat"); //remove file for write_laser_log
 
 	/* Establish connection to robot sensors and actuators.
    */
@@ -418,6 +433,8 @@ int main()
 		speedl->updated = 1;
 		speedr->data[0] = 100 * mot.motorspeed_r;
 		speedr->updated = 1;
+
+		write_laser_log(laserpar);
 		
 		if (time % 100 == 0)
 			//    printf(" laser %f \n",laserpar[3]);
