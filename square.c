@@ -89,6 +89,8 @@ typedef struct
 	double theta;
 	// Linesensor array
 	int linesensor[8];
+	// IR-sensor array
+	//int linesensor[8];
 	// total distance traveled
 	double traveldist;
 } odotype;
@@ -185,12 +187,26 @@ void write_log(double log[MAXINT][7]) //here
     fclose(fPtr); // Close file to save file data
 }
 
+void write_laser_log(double laserpar[10]){
+	//TODO clear the file before run.
+    FILE * fPtr;
+    fPtr = fopen("/home/smr/offline/square/laserpar.dat", "a"); //a for appending not overwriting
+    if(fPtr == NULL){
+        printf("Unable to create file.\n"); // File not created hence exit
+    }
+    fprintf(fPtr,"%f %f %f %f %f %f %f %f %f %f\n",
+	   laserpar[0], laserpar[1], laserpar[2], laserpar[3], laserpar[4], laserpar[5], laserpar[6],
+	    laserpar[7], laserpar[8], laserpar[9]); // Write data to file
+    fclose(fPtr); // Close file to save file data
+}
+
 
 int main()
 {
 	int running, n = 0, arg, time = 0, m = 0;
 	double dist = 0, angle = 0, speed = 0;
 	double control_angle = 0;
+	remove("/home/smr/offline/square/laserpar.dat"); //remove file for write_laser_log
 
 	/* Establish connection to robot sensors and actuators.
    */
@@ -276,7 +292,8 @@ int main()
 		{
 			xmllaser = xml_in_init(4096, 32);
 			printf(" laserserver xml initialized \n");
-			len = sprintf(buf, "push  t=0.2 cmd='mrcobst width=0.4'\n");
+			//len = sprintf(buf, "push  t=0.2 cmd='mrcobst width=0.4'\n");
+			len=sprintf(buf,"scanpush cmd='zoneobst'\n");
 			send(lmssrv.sockfd, buf, len, 0);
 		}
 	}
@@ -418,9 +435,11 @@ int main()
 		speedl->updated = 1;
 		speedr->data[0] = 100 * mot.motorspeed_r;
 		speedr->updated = 1;
+
+		write_laser_log(laserpar);
 		
 		if (time % 100 == 0)
-			//    printf(" laser %f \n",laserpar[3]);
+			   printf(" laser %f \n",laserpar[3]);
 			time++;
 		/* stop if keyboard is activated*/
 		ioctl(0, FIONREAD, &arg);
@@ -667,16 +686,16 @@ void update_motcon(motiontype *p, odotype *o){
 		int line_index;
 		line_index = lowest_intensity(odo.linesensor, 1); // 1 for left 0 for right
 		dV = 0.1 * (3.5 - line_index);
-		printf("dV: %f \t line_index: %d  \t travel_dist: %f |||||| \t %d \t %d\t %d\t %d\t %d\t %d\t %d\t %d\n", dV, line_index, o->traveldist,
-		 odo.linesensor[0], odo.linesensor[1], odo.linesensor[2], odo.linesensor[3], odo.linesensor[4], odo.linesensor[5], odo.linesensor[6], odo.linesensor[7]);
+		//printf("dV: %f \t line_index: %d  \t travel_dist: %f |||||| \t %d \t %d\t %d\t %d\t %d\t %d\t %d\t %d\n", dV, line_index, o->traveldist,
+		// odo.linesensor[0], odo.linesensor[1], odo.linesensor[2], odo.linesensor[3], odo.linesensor[4], odo.linesensor[5], odo.linesensor[6], odo.linesensor[7]);
 		
 		/*
 		// center of gravity
 		float cg;
 		cg = center_of_gravity(odo.linesensor);
 		dV = 0.1 * (3.5 - cg);S
-		printf("dV: %f \t cg: %f |||||| \t %d \t %d\t %d\t %d\t %d\t %d\t %d\t %d\n", dV, cg,
-		 odo.linesensor[0], odo.linesensor[1], odo.linesensor[2], odo.linesensor[3], odo.linesensor[4], odo.linesensor[5], odo.linesensor[6], odo.linesensor[7]);
+		//printf("dV: %f \t cg: %f |||||| \t %d \t %d\t %d\t %d\t %d\t %d\t %d\t %d\n", dV, cg,
+		// odo.linesensor[0], odo.linesensor[1], odo.linesensor[2], odo.linesensor[3], odo.linesensor[4], odo.linesensor[5], odo.linesensor[6], odo.linesensor[7]);
 		*/
 
 		// 3 - Calulcate remaining distance.
