@@ -187,11 +187,13 @@ void write_log(double log[MAXINT][7]) //here
     fclose(fPtr); // Close file to save file data
 }
 
+
 void write_laser_log(double laserpar[10]){
 	//TODO clear the file before run.
     FILE * fPtr;
     fPtr = fopen("/home/smr/offline/square/laserpar.dat", "a"); //a for appending not overwriting
-    if(fPtr == NULL){
+    if(fPtr == NULL)
+    {
         printf("Unable to create file.\n"); // File not created hence exit
     }
     fprintf(fPtr,"%f %f %f %f %f %f %f %f %f %f\n",
@@ -201,8 +203,7 @@ void write_laser_log(double laserpar[10]){
 }
 
 
-int main()
-{
+int main(){
 	int running, n = 0, arg, time = 0, m = 0;
 	double dist = 0, angle = 0, speed = 0;
 	double control_angle = 0;
@@ -439,7 +440,7 @@ int main()
 		write_laser_log(laserpar);
 		
 		if (time % 100 == 0)
-			   printf(" laser %f \n",laserpar[3]);
+		//	   printf(" laser %f \n",laserpar[3]);
 			time++;
 		/* stop if keyboard is activated*/
 		ioctl(0, FIONREAD, &arg);
