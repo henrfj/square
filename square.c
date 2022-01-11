@@ -440,7 +440,9 @@ int main(){
 		write_laser_log(laserpar);
 		
 		if (time % 100 == 0)
-		//	   printf(" laser %f \n",laserpar[3]);
+			   printf(" laser %f %f %f %f %f %f %f %f %f %f \n", laserpar[0], laserpar[1], laserpar[2], laserpar[3],
+			    laserpar[4], laserpar[5], laserpar[6],
+	    		laserpar[7], laserpar[8], laserpar[9]);
 			time++;
 		/* stop if keyboard is activated*/
 		ioctl(0, FIONREAD, &arg);
