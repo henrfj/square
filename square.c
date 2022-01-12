@@ -69,6 +69,8 @@ getoutputref(const char *sym_name, symTableElement *tab)
 #define P_GAIN_ANGLE 0.05
 #define MAXLINE 128
 #define MINLINE 0
+#define KA 16.0
+#define KB 76.0
 
 typedef struct
 {							 //input signals
@@ -90,7 +92,7 @@ typedef struct
 	// Linesensor array
 	int linesensor[8];
 	// IR-sensor array
-	//int linesensor[8];
+	int irsensor[5];
 	// total distance traveled
 	double traveldist;
 } odotype;
@@ -112,6 +114,10 @@ typedef struct
 	double startpos;
 	// Current speed of the system
 	double currentspeed;
+	// The type of line to follow
+	char linetype;
+	// The condition to stop a motion
+	int condition_type;
 } motiontype;
 
 void reset_odo(odotype *p);
@@ -131,15 +137,27 @@ enum
 	
 };
 
+enum conditions{
+	drivendist = 1,
+	irdistfrontmiddle,
+	irdistfrontright,
+	irdistfrontleft,
+	irdistright_less, //<
+	irdistright_more, //>
+	irdistleft_less,  //<	
+	irdistleft_more   //>
+};
+
 void update_motcon(motiontype *p, odotype *o);
 
 int fwd(double dist, double speed, int time);
 int turn(double angle, double speed, int time);
 int dc(double dist, double speed, double angle, int time);
-int fol_dist(double dist,double speed, int time);
+int follow_line(int condition_type, double condition, char linetype, double speed, int time);
 
 
 void linesensor_normalizer(int  linedata[8]);
+void irsensor_transformer(int irdata[5], float irdistances[5]);
 float center_of_gravity(int linedata[8]);
 int lowest_intensity(int linedata[8], char followleft);
 
@@ -167,7 +185,8 @@ enum
 	ms_turn,
 	ms_end,
 	ms_direction_control,
-	ms_followline
+	ms_followline,
+	ms_followline_ir
 };
 
 
@@ -207,6 +226,9 @@ int main(){
 	int running, n = 0, arg, time = 0, m = 0;
 	double dist = 0, angle = 0, speed = 0;
 	double control_angle = 0;
+	char linetype = 0; // 0 for br, 1 for bl, 2 for cg
+	int condition = -1; // -1 means no condition
+	float irdistances[5];
 	remove("/home/smr/offline/square/laserpar.dat"); //remove file for write_laser_log
 
 	/* Establish connection to robot sensors and actuators.
@@ -308,8 +330,11 @@ int main(){
 	odo.cl = odo.cr;
 	odo.left_enc = lenc->data[0];
 	odo.right_enc = renc->data[0];
-	// linesensor
+	// Linesensor
 	memcpy(odo.linesensor, linesensor->data, sizeof(odo.linesensor));
+	// IRsensor
+	memcpy(odo.irsensor, irsensor->data, sizeof(odo.irsensor));
+
 	reset_odo(&odo);
 
 	mot.w = odo.w;
@@ -348,20 +373,18 @@ int main(){
 		odo.left_enc = lenc->data[0];
 		odo.right_enc = renc->data[0];
 		memcpy(odo.linesensor, linesensor->data, sizeof(odo.linesensor));
-		
-		/*
-		linesensor_normalizer(odo.linesensor);
-		int line_index;
-		line_index = lowest_intensity(odo.linesensor);
-		
-		for (int i=0; i<8; i++){
-			printf("%d\t", odo.linesensor[i]);
-		}
-		printf("=> %d\n", line_index);
-		*/
+		memcpy(odo.irsensor, irsensor->data, sizeof(odo.irsensor));
 
-		// the rest of the odo updates
+		// Execute ODOMETRY
 		update_odo(&odo);
+
+		irsensor_transformer(odo.irsensor, irdistances);
+		for (int i=0; i<5; i++){
+			printf("%d(%f)\t", odo.irsensor[i], irdistances[i]);
+		}
+		printf("\n");
+
+
 
 		/****************************************
 		/ mission statemachine   
@@ -372,14 +395,17 @@ int main(){
 		case ms_init:
 			n = 1; //4
 			m = 1;
-			dist = 20;
+			dist = 4;
 			speed = 0.2; // 0.2 0.4 0.6
-			// angle = 90.0 / 180 * M_PI; // CW
-			//angle = -90.0 / 180 * M_PI; //CCW
 			angle = 149 * M_PI/180;
 			control_angle = 75 * M_PI/180;
-			//mission.state = ms_direction_control;
+
+			// Some advanced parameters
 			mission.state = ms_followline;
+			linetype = 2; // 0 for br, 1 for bl, 2 for cg
+			condition = drivendist;
+
+
 			break;
 
 		case ms_fwd:
@@ -387,13 +413,11 @@ int main(){
 			if (fwd(dist, speed, mission.time))
 				//mission.state = ms_turn;
 				//mission.state = ms_direction_control;
-				mission.state = ms_direction_control;
+				mission.state = ms_end;
 			break;
 
 		case ms_followline:
-			if (fol_dist(dist,speed, mission.time))
-				//mission.state = ms_turn;
-				//mission.state = ms_direction_control;
+			if (follow_line(condition, dist, linetype, speed, mission.time))
 				mission.state = ms_end;
 			break;
 
@@ -439,11 +463,14 @@ int main(){
 
 		write_laser_log(laserpar);
 		
-		if (time % 100 == 0)
+		if (time % 100 == 0){
+			/*
 			   printf(" laser %f %f %f %f %f %f %f %f %f %f \n", laserpar[0], laserpar[1], laserpar[2], laserpar[3],
 			    laserpar[4], laserpar[5], laserpar[6],
 	    		laserpar[7], laserpar[8], laserpar[9]);
+			*/
 			time++;
+		}
 		/* stop if keyboard is activated*/
 		ioctl(0, FIONREAD, &arg);
 		if (arg != 0)
@@ -629,7 +656,7 @@ void update_motcon(motiontype *p, odotype *o){
 			p->motorspeed_l = p->currentspeed;
 			p->motorspeed_r = p->currentspeed;
 		}
-		printf("Current speed: %f\n", p->currentspeed);	
+		//printf("Current speed: %f\n", p->currentspeed);	
 		break;
 
 	case mot_turn: // HERE WE ALREADY KNOW OUR DESIRED ANGLE!
@@ -682,29 +709,23 @@ void update_motcon(motiontype *p, odotype *o){
 		linesensor_normalizer(odo.linesensor);
 
 		// 2 - do the simple lowest intensity algorithm "fl"
-
-		
-		// IF you want to hug the side
-		
-		int line_index;
-		line_index = lowest_intensity(odo.linesensor, 1); // 1 for left 0 for right
-		dV = 0.1 * (3.5 - line_index);
+		// 0 for br, 1 for bl, 2 for cg
+		if (p->linetype==2){ // center of gravity
+			dV = 0.1 * (3.5 - center_of_gravity(odo.linesensor));
+		}else{
+			dV = 0.1 * (3.5 - lowest_intensity(odo.linesensor, p->linetype));
+		}
 		//printf("dV: %f \t line_index: %d  \t travel_dist: %f |||||| \t %d \t %d\t %d\t %d\t %d\t %d\t %d\t %d\n", dV, line_index, o->traveldist,
-		// odo.linesensor[0], odo.linesensor[1], odo.linesensor[2], odo.linesensor[3], odo.linesensor[4], odo.linesensor[5], odo.linesensor[6], odo.linesensor[7]);
-		
-		/*
-		// center of gravity
-		float cg;
-		cg = center_of_gravity(odo.linesensor);
-		dV = 0.1 * (3.5 - cg);S
-		//printf("dV: %f \t cg: %f |||||| \t %d \t %d\t %d\t %d\t %d\t %d\t %d\t %d\n", dV, cg,
-		// odo.linesensor[0], odo.linesensor[1], odo.linesensor[2], odo.linesensor[3], odo.linesensor[4], odo.linesensor[5], odo.linesensor[6], odo.linesensor[7]);
-		*/
 
-		// 3 - Calulcate remaining distance.
-		d = p->dist - o->traveldist; 						
-		
-		if (d>0){
+		// 3 - Calulcate stop condition.
+		char go_on=0;
+		if (p->condition_type==drivendist){
+			d = p->dist - o->traveldist; //distance left
+			go_on = (d>0);
+		}
+
+		// Go on or stop
+		if (go_on){
 			p->motorspeed_l = p->speedcmd + dV / 2;
 			p->motorspeed_r = p->speedcmd - dV / 2;
 		}else{
@@ -713,9 +734,9 @@ void update_motcon(motiontype *p, odotype *o){
 			p->finished = 1;
 		}
 
-		// TODO: what if there is no more line? --- fix it
+		// TODO: what if there is no more line?
 		// -- follow LEFT/RIGHT will just go in a circle. as line_index will be 0 or 7.
-		// -- CG will go straight, but will actually 
+		// -- CG will go straight
 
 		break;
 	
@@ -779,6 +800,12 @@ void update_motcon(motiontype *p, odotype *o){
 			}
 		}
 		break;
+	}
+}
+
+void irsensor_transformer(int irdata[5], float irdistances[5]){
+	for (int i = 0; i < 5; i ++){
+		irdistances[i] = KA / ((float)irdata[i] - KB);
 	}
 }
 
@@ -852,12 +879,21 @@ int dc(double dist, double speed, double angle, int time){
 	}
 }
 
-int fol_dist(double dist, double speed, int time){
+int follow_line(int condition_type, double condition, char linetype, double speed, int time){
 	if (time == 0){
 		mot.cmd = mot_line_follow;
 		mot.speedcmd = speed;
-		mot.dist = dist;
+		mot.dist = 0;
+		mot.linetype = linetype; // 0 for br, 1 for bl, 2 for cg
+
+		// implement more conditions
+		if (condition_type==drivendist){
+			mot.condition_type = condition_type;
+			mot.dist = condition;
+		}
+		
 		return 0;
+
 	}else{
 		return mot.finished;
 	}
