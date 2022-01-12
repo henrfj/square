@@ -118,6 +118,8 @@ typedef struct
 	char linetype;
 	// The condition to stop a motion
 	int condition_type;
+	// The IR distance required to maintain a condition
+	double ir_dist;
 } motiontype;
 
 void reset_odo(odotype *p);
@@ -131,6 +133,7 @@ enum
 {
 	mot_stop = 1,
 	mot_move,
+	mot_drive,
 	mot_turn,
 	mot_direction_control,
 	mot_line_follow
@@ -145,12 +148,14 @@ enum conditions{
 	irdistright_less, //<
 	irdistright_more, //>
 	irdistleft_less,  //<	
-	irdistleft_more   //>
+	irdistleft_more,   //>
+	crossinblackline
 };
 
 void update_motcon(motiontype *p, odotype *o);
 
 int fwd(double dist, double speed, int time);
+int drive(int condition_type, double condition, double speed, int time);
 int turn(double angle, double speed, int time);
 int dc(double dist, double speed, double angle, int time);
 int follow_line(int condition_type, double condition, char linetype, double speed, int time);
@@ -182,6 +187,7 @@ enum
 {
 	ms_init,
 	ms_fwd,
+	ms_drive,
 	ms_turn,
 	ms_end,
 	ms_direction_control,
@@ -224,11 +230,10 @@ void write_laser_log(double laserpar[10]){
 
 int main(){
 	int running, n = 0, arg, time = 0, m = 0;
-	double dist = 0, angle = 0, speed = 0;
+	double dist = 0, angle = 0, speed = 0, condition_param = 0;
 	double control_angle = 0;
 	char linetype = 0; // 0 for br, 1 for bl, 2 for cg
 	int condition = -1; // -1 means no condition
-	float irdistances[5];
 	remove("/home/smr/offline/square/laserpar.dat"); //remove file for write_laser_log
 
 	/* Establish connection to robot sensors and actuators.
@@ -378,13 +383,15 @@ int main(){
 		// Execute ODOMETRY
 		update_odo(&odo);
 
+		/*
+		float irdistances[5];
+
 		irsensor_transformer(odo.irsensor, irdistances);
 		for (int i=0; i<5; i++){
 			printf("%d(%f)\t", odo.irsensor[i], irdistances[i]);
 		}
 		printf("\n");
-
-
+		*/
 
 		/****************************************
 		/ mission statemachine   
@@ -395,19 +402,23 @@ int main(){
 		case ms_init:
 			n = 1; //4
 			m = 1;
-			dist = 4;
+			dist = 3;
 			speed = 0.2; // 0.2 0.4 0.6
 			angle = 149 * M_PI/180;
 			control_angle = 75 * M_PI/180;
 
-			// Some advanced parameters
+			// Using followline
 			mission.state = ms_followline;
-			linetype = 2; // 0 for br, 1 for bl, 2 for cg
-			condition = drivendist;
+			linetype = 0; // 0 for br, 1 for bl, 2 for cg
+			condition = drivendist; //drivendist, irdistfrontmiddle
+			condition_param = dist; //dist;
 
-
+			// Using drive
+			mission.state = ms_drive;
+			condition = drivendist; // drivendist, irdistfrontmiddle
+			condition_param = dist; // dist, 0.2
 			break;
-
+	
 		case ms_fwd:
 			//printf("ms_fwd!\n");
 			if (fwd(dist, speed, mission.time))
@@ -415,9 +426,14 @@ int main(){
 				//mission.state = ms_direction_control;
 				mission.state = ms_end;
 			break;
+		
+		case ms_drive:
+			if (drive(condition, condition_param, speed, mission.time))
+				mission.state = ms_end;
+			break;
 
 		case ms_followline:
-			if (follow_line(condition, dist, linetype, speed, mission.time))
+			if (follow_line(condition, condition_param, linetype, speed, mission.time))
 				mission.state = ms_end;
 			break;
 
@@ -484,7 +500,7 @@ int main(){
 		}
 		
 		clock_t current_time = clock();
-		double time_spent = (double)(current_time - start_time) / 5000; //TODO: use time() function instead
+		double time_spent = (double)(current_time - start_time) / 10000; //TODO: use time() function instead 
 
 		logg[log_index][0] = mission.time; 		// no. tics for the current mission.
 		logg[log_index][1] = mot.motorspeed_l;	// 
@@ -576,13 +592,14 @@ void update_odo(odotype *p){
 // MOTOR STATE MACHINE
 void update_motcon(motiontype *p, odotype *o){
 	//static double currentspeed = 0; // curren speed of the system
-	double clock_acceleration;
 	double max_acceleration = 0.5;
+	double clock_acceleration = max_acceleration * TIMETIC;
 	double driven_dist;
 	double d;
 	static int deaccel_flag = 0;
 	double current_angle = 0;
 	double dV;
+	float irdistances[5];
 
 	if (p->cmd != 0)
 	{ // initialize the motor commands
@@ -592,10 +609,15 @@ void update_motcon(motiontype *p, odotype *o){
 		case mot_stop:
 			p->curcmd = mot_stop;
 			break;
+		
 		case mot_move:
-
 			p->startpos = (p->left_pos + p->right_pos) / 2;
 			p->curcmd = mot_move;
+			break;
+		
+		case mot_drive:
+			p->startpos = (p->left_pos + p->right_pos) / 2;
+			p->curcmd = mot_drive;
 			break;
 
 		case mot_turn:
@@ -629,9 +651,9 @@ void update_motcon(motiontype *p, odotype *o){
 	case mot_move:
 		driven_dist = (p->right_pos + p->left_pos) / 2 - p->startpos; 
 		d = p->dist - driven_dist; 						// remaining distance
-		clock_acceleration = max_acceleration * TIMETIC; // Incremental speed/program run
-
-		if ((deaccel_flag) || (p->currentspeed >= sqrt(2 * max_acceleration * d))){ /// We need to deaccelerate
+		
+		// We need to deaccelerate
+		if ((deaccel_flag) || (p->currentspeed >= sqrt(2 * max_acceleration * d))){ 
 			if (!deaccel_flag){
 				printf("The flag has been hoisted!\n");
 				deaccel_flag = 1;
@@ -639,7 +661,7 @@ void update_motcon(motiontype *p, odotype *o){
 			
 			if (fabs(0 - p->currentspeed) > clock_acceleration){
 				p->currentspeed -= clock_acceleration;
-			}else{
+			}else{ // Completely stopped
 				p->currentspeed = 0;
 				p->finished = 1;
 				deaccel_flag = 0;
@@ -647,7 +669,8 @@ void update_motcon(motiontype *p, odotype *o){
 			p->motorspeed_l = p->currentspeed;
 			p->motorspeed_r = p->currentspeed;
 
-		}else{ // Keep accelerating or moving forward
+		}// Keep accelerating or moving forward
+		else{ 
 			if (fabs(p->speedcmd - p->currentspeed) > clock_acceleration){ // Accelerate
 				p->currentspeed += clock_acceleration;
 			}else{ // Max speed 
@@ -657,6 +680,50 @@ void update_motcon(motiontype *p, odotype *o){
 			p->motorspeed_r = p->currentspeed;
 		}
 		//printf("Current speed: %f\n", p->currentspeed);	
+		break;
+
+	case mot_drive:
+		/* Moving forward, with acceleration, under certain conditions */
+		d = 0;
+		if(p->condition_type==drivendist){
+			driven_dist = (p->right_pos + p->left_pos) / 2 - p->startpos; 
+			d = p->dist - driven_dist; 						// remaining distance
+		}else if(p->condition_type==irdistfrontmiddle){
+			irsensor_transformer(odo.irsensor, irdistances);
+			d = irdistances[2] - p->ir_dist; 
+		}
+		printf("Remaining distance:\t %f \t Driven distance: %f\n", d, odo.x_pos);
+
+		// We need to deaccelerate
+		if ((deaccel_flag) || (p->currentspeed >= sqrt(2 * max_acceleration * d))){ 
+			if (!deaccel_flag){
+				printf("The flag has been hoisted!\n");
+				deaccel_flag = 1;
+			}
+			
+			if (fabs(0 - p->currentspeed) > clock_acceleration){
+				p->currentspeed -= clock_acceleration;
+			}else{ // Completely stopped
+				p->currentspeed = 0;
+				p->finished = 1;
+				deaccel_flag = 0;
+			}
+			p->motorspeed_l = p->currentspeed;
+			p->motorspeed_r = p->currentspeed;
+
+		}// Keep accelerating or moving forward
+		else{ 
+			if (fabs(p->speedcmd - p->currentspeed) > clock_acceleration){ // Accelerate
+				p->currentspeed += clock_acceleration;
+			}else{ // Max speed 
+				p->currentspeed = p->speedcmd;
+			}
+			p->motorspeed_l = p->currentspeed;
+			p->motorspeed_r = p->currentspeed;
+		}
+		//printf("Current speed: %f\n", p->currentspeed);	
+		break;
+
 		break;
 
 	case mot_turn: // HERE WE ALREADY KNOW OUR DESIRED ANGLE!
@@ -703,7 +770,7 @@ void update_motcon(motiontype *p, odotype *o){
 		break;
 
 	case mot_line_follow:
-		/*Follow a line*/
+		/*Follow a line under some condition*/
 
 		// 1 - normalize the incomming data
 		linesensor_normalizer(odo.linesensor);
@@ -715,13 +782,17 @@ void update_motcon(motiontype *p, odotype *o){
 		}else{
 			dV = 0.1 * (3.5 - lowest_intensity(odo.linesensor, p->linetype));
 		}
-		//printf("dV: %f \t line_index: %d  \t travel_dist: %f |||||| \t %d \t %d\t %d\t %d\t %d\t %d\t %d\t %d\n", dV, line_index, o->traveldist,
 
 		// 3 - Calulcate stop condition.
 		char go_on=0;
 		if (p->condition_type==drivendist){
 			d = p->dist - o->traveldist; //distance left
 			go_on = (d>0);
+		
+		}else if(p->condition_type==irdistfrontmiddle){
+			// Fill irdistances with meter data
+			irsensor_transformer(odo.irsensor, irdistances);
+			go_on = (p->ir_dist) < (irdistances[2]);
 		}
 
 		// Go on or stop
@@ -733,6 +804,7 @@ void update_motcon(motiontype *p, odotype *o){
 			p->motorspeed_r = 0;
 			p->finished = 1;
 		}
+
 
 		// TODO: what if there is no more line?
 		// -- follow LEFT/RIGHT will just go in a circle. as line_index will be 0 or 7.
@@ -879,17 +951,47 @@ int dc(double dist, double speed, double angle, int time){
 	}
 }
 
+int drive(int condition_type, double condition, double speed, int time){
+	if (time == 0){
+		mot.cmd = mot_drive;
+		mot.speedcmd = speed;
+		mot.dist = 0;
+		mot.condition_type = condition_type;
+
+		// TODO: implement more conditions
+		if (condition_type==drivendist){
+			mot.dist = condition;
+		}
+		else if(condition_type==irdistfrontmiddle){
+			mot.ir_dist = condition;
+		}
+		else{
+			printf("Wrong condition type inserted.\n");
+		}
+		return 0;
+
+	}else{
+		return mot.finished;
+	}
+}
+
 int follow_line(int condition_type, double condition, char linetype, double speed, int time){
 	if (time == 0){
 		mot.cmd = mot_line_follow;
 		mot.speedcmd = speed;
 		mot.dist = 0;
 		mot.linetype = linetype; // 0 for br, 1 for bl, 2 for cg
+		mot.condition_type = condition_type;
 
-		// implement more conditions
+		// TODO: implement more conditions
 		if (condition_type==drivendist){
-			mot.condition_type = condition_type;
 			mot.dist = condition;
+		}
+		else if(condition_type==irdistfrontmiddle){
+			mot.ir_dist = condition;
+		}
+		else{
+			printf("Wrong condition type inserted.\n");
 		}
 		
 		return 0;
