@@ -67,8 +67,9 @@ getoutputref(const char *sym_name, symTableElement *tab)
 #define MAXINT 65536
 #define TIMETIC 0.01
 #define P_GAIN_ANGLE 0.05
-#define MAXLINE 128
-#define MINLINE 0
+#define WHITELINE 255
+#define GREYLINE 128
+#define BLACKLINE 0
 #define KA 16.0
 #define KB 76.0
 
@@ -163,12 +164,21 @@ int follow_line(int condition_type, double condition, char linetype, double spee
 
 
 void linesensor_normalizer(int  linedata[8]);
+void linesensor_normalizer_2(int linedata[8], float line_intensity[8]);
 void irsensor_transformer(int irdata[5], float irdistances[5]);
+<<<<<<< HEAD
 float center_of_gravity(int linedata[8], char color);
 int lowest_intensity(int linedata[8], char followleft);
 int crossingblackline(int linedata[8] );
 int blackLineFound(int linedata[8], int amountOfBlack);
 int checkCondition(motiontype *p, odotype *o);
+=======
+float center_of_gravity(float linedata[8], char color);
+int lowest_intensity(float linedata[8], char followleft);
+int crossingblackline(int linedata[8]);
+void command(double missions[100][7], int mission, int condition,
+ double condition_parameter, double speed, int linetype, double distance, double angle);
+>>>>>>> 999ca07cc975201a0366d5e6f90df1f5579d64f8
 
 typedef struct
 {
@@ -415,7 +425,7 @@ int main(){
 		switch (mission.state)
 		{
 		case ms_init:
-			// Turn: might be bugged!
+			// Turn: 
 
 			// Fwd: what about negative distance?
 
@@ -441,26 +451,15 @@ int main(){
 
 			// MISSION ARRAY: ms, cond, condparam, speed, linetype, distance, angle
 			mission.state = ms_houston;
-			mission_lenght = 2;
+			mission_lenght = 5;
 			j = 0;
-			// followline "br" @v 0.2 : (irdistfrontmiddle < 0.2)
-			missions[0][0] = ms_followline;
-			missions[0][1] = irdistfrontmiddle;
-			missions[0][2] = 0.2;
-			missions[0][3] = 0.2,
-			missions[0][4] = br;
-			missions[0][5] = 0;
-			missions[0][6] = 0;
 
-			// turn 180 degrees
-			//mission[1] = {ms_turn, 0, 0, 0.2, 0, 0, 180};
-			missions[1][0] = ms_turn;
-			missions[1][1] = 0;
-			missions[1][2] = 0;
-			missions[1][3] = 0.2,
-			missions[1][4] = 0;
-			missions[1][5] = 0;
-			missions[1][6] = 180*M_PI/180;
+			// Obstacle 5
+			command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
+			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
+			command(missions, ms_followline, crossingblack, 0, 0.2, wm, 0, 0);
+			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
+			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
 			break;
 
 		case ms_houston:
@@ -647,6 +646,7 @@ void update_motcon(motiontype *p, odotype *o){
 	double current_angle = 0;
 	double dV;
 	float irdistances[5];
+	float line_intensity[8];
 
 	if (p->cmd != 0)
 	{ // initialize the motor commands
@@ -702,7 +702,6 @@ void update_motcon(motiontype *p, odotype *o){
 		// We need to deaccelerate
 		if ((deaccel_flag) || (p->currentspeed >= sqrt(2 * max_acceleration * d))){ 
 			if (!deaccel_flag){
-				printf("The flag has been hoisted!\n");
 				deaccel_flag = 1;
 			}
 			
@@ -761,7 +760,6 @@ void update_motcon(motiontype *p, odotype *o){
 		// We need to deaccelerate
 		if ((deaccel_flag) || (p->currentspeed >= sqrt(2 * max_acceleration * d))){ 
 			if (!deaccel_flag){
-				printf("The flag has been hoisted!\n");
 				deaccel_flag = 1;
 			}
 			
@@ -833,16 +831,17 @@ void update_motcon(motiontype *p, odotype *o){
 	case mot_line_follow:
 		/*Follow a line under some condition*/
 
-		// 1 - normalize the incomming data
-		linesensor_normalizer(odo.linesensor);
+		// 1 - normalize linesensor data
+		linesensor_normalizer_2(odo.linesensor, line_intensity);
 
-		// 2 - do the simple lowest intensity algorithm "fl"
+
+		// 2 - Do the simple lowest intensity algorithm "fl"
 		if (p->linetype==bm){ // center of gravity
-			dV = 0.1 * (3.5 - center_of_gravity(odo.linesensor, 0));
+			dV = 0.1 * (3.5 - center_of_gravity(line_intensity, 0));
 		}else if(p->linetype==wm){
-			dV = 0.1 * (3.5 - center_of_gravity(odo.linesensor, 1));
+			dV = 0.1 * (3.5 - center_of_gravity(line_intensity, 1));
 		}else{
-			dV = 0.1 * (3.5 - lowest_intensity(odo.linesensor, p->linetype));
+			dV = 0.1 * (3.5 - lowest_intensity(line_intensity, p->linetype));
 		}
 
 		// 3 - Calulcate stop condition.
@@ -970,21 +969,25 @@ void irsensor_transformer(int irdata[5], float irdistances[5]){
 
 void linesensor_normalizer(int linedata[8]){
 	for (int i = 0; i < 8; i ++){
-		linedata[i] = (linedata[i] - MINLINE) / (MAXLINE - MINLINE);
-		// Boolan values
-		if (linedata[i]>0.5){linedata[i]=1;}
-		else{linedata[i] = 0;}
+		linedata[i] = (linedata[i] - BLACKLINE) / (WHITELINE - BLACKLINE);
+	}
+
+}
+
+void linesensor_normalizer_2(int linedata[8], float line_intensity[8]){
+	for (int i = 0; i < 8; i ++){
+		line_intensity[i] = (float)(linedata[i] - BLACKLINE) / (float)(WHITELINE - BLACKLINE);
+
 	}
 }
 
-int lowest_intensity(int linedata[8], char followleft){
+int lowest_intensity(float linedata[8], char followleft){
 	/* Not assuming boolean values.
 	NB! linedata is from right to left.
 
 	If boolean it will just return the first/last index it finds.
 	If we use linedata[i] <= lowest_value we get "follow left", if we use < we get "follow right"
 	*/ 
-
 	double lowest_value = 1;
 	int center_index = 0;
 	for (int i = 0; i < 8; i ++){
@@ -1003,7 +1006,7 @@ int lowest_intensity(int linedata[8], char followleft){
 	return center_index;
 }
 
-float center_of_gravity(int linedata[8], char color){
+float center_of_gravity(float linedata[8], char color){
 	// Assuming boolean intensity values
 	// Finds the average index of zero values.
 	int min_index_sum = 0;
@@ -1017,13 +1020,13 @@ float center_of_gravity(int linedata[8], char color){
 
 	// Avoid dividing by zero.
 	if (!min_index_count){
+		//printf("No line found!\n");
 		//return 4.5; // lost the line, spin slowly to one side
 		return 3.5; // lost the line, go straight
 	}
 
 	return ((float)min_index_sum)/((float)min_index_count);
 }
-
 
 int dc(double dist, double speed, double angle, int time){
 	if (time == 0){
@@ -1117,6 +1120,23 @@ int turn(double angle, double speed, int time)
 		return mot.finished;
 }
 
+
+void command(double missions[100][7], int mission, int condition,
+ double condition_parameter, double speed, int linetype, double distance, double angle){
+		
+		static int command_no = 0;
+			
+		missions[command_no][0] = mission;
+		missions[command_no][1] = condition;
+		missions[command_no][2] = condition_parameter;
+		missions[command_no][3] = speed,
+		missions[command_no][4] = linetype;
+		missions[command_no][5] = distance;
+		missions[command_no][6] = angle;
+
+		command_no += 1;
+
+}
 
 
 void sm_update(smtype *p)
