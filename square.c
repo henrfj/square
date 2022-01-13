@@ -440,26 +440,50 @@ int main(){
 
 			// MISSION ARRAY: ms, cond, condparam, speed, linetype, distance, angle
 			mission.state = ms_houston;
-			mission_lenght = 2;
+			mission_lenght = 5;
 			j = 0;
 			// followline "br" @v 0.2 : (irdistfrontmiddle < 0.2)
 			missions[0][0] = ms_followline;
-			missions[0][1] = drivendist;
-			missions[0][2] = 2;
+			missions[0][1] = crossingblack;
+			missions[0][2] = 0;
 			missions[0][3] = 0.2,
 			missions[0][4] = bm;
 			missions[0][5] = 0;
 			missions[0][6] = 0;
 
-			// turn 180 degrees
-			//mission[1] = {ms_turn, 0, 0, 0.2, 0, 0, 180};
-			missions[1][0] = ms_turn;
+			missions[1][0] = ms_fwd;
 			missions[1][1] = 0;
 			missions[1][2] = 0;
-			missions[1][3] = 0.2,
+			missions[1][3] = 0.1,
 			missions[1][4] = 0;
-			missions[1][5] = 0;
-			missions[1][6] = -90*M_PI/180;
+			missions[1][5] = 0.2;
+			missions[1][6] = 0;
+
+			missions[2][0] = ms_followline;
+			missions[2][1] = crossingblack;
+			missions[2][2] = 0;
+			missions[2][3] = 0.2,
+			missions[2][4] = wm;
+			missions[2][5] = 0;
+			missions[2][6] = 0;
+
+			missions[3][0] = ms_fwd;
+			missions[3][1] = 0;
+			missions[3][2] = 0;
+			missions[3][3] = 0.2,
+			missions[3][4] = 0;
+			missions[3][5] = 0.2;
+			missions[3][6] = 0;
+
+			missions[4][0] = ms_turn;
+			missions[4][1] = 0;
+			missions[4][2] = 0;
+			missions[4][3] = 0.2,
+			missions[4][4] = 0;
+			missions[4][5] = 0;
+			missions[4][6] = -90*M_PI/180;
+
+
 			break;
 
 		case ms_houston:
@@ -976,12 +1000,9 @@ void linesensor_normalizer(int linedata[8]){
 
 void linesensor_normalizer_2(int linedata[8], float line_intensity[8]){
 	for (int i = 0; i < 8; i ++){
-		printf("%d ",linedata[i]);
 		line_intensity[i] = (float)(linedata[i] - BLACKLINE) / (float)(WHITELINE - BLACKLINE);
-		printf("=>%f \t",line_intensity[i]);
 
 	}
-	printf("\n");
 }
 
 int lowest_intensity(float linedata[8], char followleft){
