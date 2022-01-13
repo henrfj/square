@@ -149,7 +149,7 @@ enum conditions{
 	irdistright_more, //>
 	irdistleft_less,  //<	
 	irdistleft_more,   //>
-	crossinblackline
+	crossingblack
 };
 
 void update_motcon(motiontype *p, odotype *o);
@@ -165,6 +165,7 @@ void linesensor_normalizer(int  linedata[8]);
 void irsensor_transformer(int irdata[5], float irdistances[5]);
 float center_of_gravity(int linedata[8]);
 int lowest_intensity(int linedata[8], char followleft);
+int crossingblackline(int linedata[8] );
 
 typedef struct
 {
@@ -430,11 +431,11 @@ int main(){
 			condition = irdistfrontmiddle; // drivendist, irdistfrontmiddle
 			condition_param = 0.2; // dist, 0.2
 
-			// Drive using the ir_right
-			mission.state = ms_drive;
-			speed = 0.1; 
-			condition = irdistright_more;
-			condition_param = 0.7;
+			// Drive using follow br and stopping blackcoss
+			mission.state = ms_followline;
+			speed = 0.2; 
+			condition = crossingblack;
+			condition_param = 0;
 
 			break;
 	
@@ -827,18 +828,41 @@ void update_motcon(motiontype *p, odotype *o){
 			// Fill irdistances with meter data
 			irsensor_transformer(odo.irsensor, irdistances);
 			go_on = (p->ir_dist) < (irdistances[2]);
+		}else if(p->condition_type==crossingblack){
+			// Fill irdistances with meter data
+			go_on=!crossingblackline(odo.linesensor);
+
 		}
 
 		// Go on or stop
-		if (go_on){
-			p->motorspeed_l = p->speedcmd + dV / 2;
-			p->motorspeed_r = p->speedcmd - dV / 2;
-		}else{
-			p->motorspeed_l = 0;
-			p->motorspeed_r = 0;
-			p->finished = 1;
+		if (!go_on){
+			deaccel_flag =1;
+
 		}
 
+		if ((deaccel_flag) ){ 
+			
+			
+			if (fabs(0 - p->currentspeed) > clock_acceleration){
+				p->currentspeed -= clock_acceleration;
+			}else{ // Completely stopped
+				p->currentspeed = 0;
+				p->finished = 1;
+				deaccel_flag = 0;
+			}
+			p->motorspeed_l = p->currentspeed  / 2;
+			p->motorspeed_r = p->currentspeed  / 2;
+
+		}// Keep accelerating or moving forward
+		else{ 
+			if (fabs(p->speedcmd - p->currentspeed) > clock_acceleration){ // Accelerate
+				p->currentspeed += clock_acceleration;
+			}else{ // Max speed 
+				p->currentspeed = p->speedcmd;
+			}
+			p->motorspeed_l =p->currentspeed + dV / 2;
+			p->motorspeed_r = p->currentspeed - dV / 2;
+		}
 
 		// TODO: what if there is no more line?
 		// -- follow LEFT/RIGHT will just go in a circle. as line_index will be 0 or 7.
@@ -1027,6 +1051,9 @@ int follow_line(int condition_type, double condition, char linetype, double spee
 		else if(condition_type==irdistfrontmiddle){
 			mot.ir_dist = condition;
 		}
+		else if(condition_type==crossingblack){
+			mot.dist=2; 
+		}
 		else{
 			printf("Wrong condition type inserted.\n");
 		}
@@ -1079,3 +1106,18 @@ void sm_update(smtype *p)
 		p->time++;
 	}
 }
+
+
+
+int crossingblackline(int linedata[8] ){
+	for (int i=1;i<7;i++){
+		if (linedata[i]!=0){
+			return 0;
+		}
+		
+	}
+	if (linedata[0]==0|| linedata[7]==0){
+			return 1;
+	}
+	return 0; //returns 1 if blackcrossing is detected else return 0
+}  
