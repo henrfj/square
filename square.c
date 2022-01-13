@@ -186,6 +186,7 @@ motiontype mot;
 enum
 {
 	ms_init,
+	ms_houston,
 	ms_fwd,
 	ms_drive,
 	ms_turn,
@@ -235,11 +236,15 @@ void write_laser_log(double laserpar[10]){
 
 
 int main(){
-	int running, n = 0, arg, time = 0, m = 0;
+	int running, arg, time = 0;
 	double dist = 0, angle = 0, speed = 0, condition_param = 0;
 	double control_angle = 0;
 	char linetype = 0; // 0 for br, 1 for bl, 2 for cg
 	int condition = -1; // -1 means no condition
+	// Mission array
+	int j = 0;
+	int mission_lenght = 0;
+	double missions[100][7];
 	remove("/home/smr/offline/square/laserpar.dat"); //remove file for write_laser_log
 
 	/* Establish connection to robot sensors and actuators.
@@ -406,8 +411,6 @@ int main(){
 		switch (mission.state)
 		{
 		case ms_init:
-			n = 1; //4
-			m = 1;
 			dist = 3;
 			speed = 0.2; // 0.2 0.4 0.6
 			angle = 149 * M_PI/180;
@@ -436,46 +439,74 @@ int main(){
 			condition = irdistright_more;
 			condition_param = 0.7;
 
+
+			// MISSION ARRAY: ms, cond, condparam, speed, linetype, distance, angle
+			mission.state = ms_houston;
+			mission_lenght = 2;
+			j = 0;
+			// followline "br" @v 0.2 : (irdistfrontmiddle < 0.2)
+			missions[0][0] = ms_followline;
+			missions[0][1] = irdistfrontmiddle;
+			missions[0][2] = 0.2;
+			missions[0][3] = 0.2,
+			missions[0][4] = br;
+			missions[0][5] = 0;
+			missions[0][6] = 0;
+
+			// turn 180 degrees
+			//mission[1] = {ms_turn, 0, 0, 0.2, 0, 0, 180};
+			missions[1][0] = ms_fwd;
+			missions[1][1] = 0;
+			missions[1][2] = 0;
+			missions[1][3] = 0.2,
+			missions[1][4] = 0;
+			missions[1][5] = 3;
+			missions[1][6] = 0;
 			break;
-	
-		case ms_fwd:
-			//printf("ms_fwd!\n");
-			if (fwd(dist, speed, mission.time))
+
+		case ms_houston:
+			if(j==mission_lenght){
+				printf("All missions complete\n");
 				mission.state = ms_end;
+				break;
+			}
+			mission.state = missions[j][0]; 
+			condition = missions[j][1];
+			condition_param = missions[0][2];
+			speed = missions[j][3];
+			linetype = missions[j][4];
+			dist = missions[j][5];
+			angle = missions[j][6];
+			printf("Current mission: %d\n", mission.state);
+			j+=1;
+			break;
+		case ms_fwd:
+			if (fwd(dist, speed, mission.time))
+				mission.state = ms_houston;
 			break;
 		
 		case ms_drive:
 			if (drive(condition, condition_param, speed, mission.time))
-				mission.state = ms_end;
+				mission.state = ms_houston;
 			break;
 
 		case ms_followline:
 			if (follow_line(condition, condition_param, linetype, speed, mission.time))
-				mission.state = ms_end;
+				mission.state = ms_houston;
 			break;
 
 
 		case ms_direction_control:
 			//printf("ms_direction_control!\n");
 			if (dc(dist, speed, control_angle, mission.time)){
-				m = m - 1;
-				if (m == 0){
-					mission.state = ms_end; 
-				}else{
-					mission.state = ms_fwd;
-				}
+				mission.state = ms_houston;
 			}
 			break;
 
 		case ms_turn:
 			//printf("ms_turn!\n");
-			if (turn(angle, speed, mission.time))
-			{
-				n = n - 1;
-				if (n == 0)
-					mission.state = ms_direction_control; //ms_end
-				else
-					mission.state = ms_fwd;
+			if (turn(angle, speed, mission.time)){
+				mission.state = ms_houston;
 			}
 			break;
 
@@ -760,14 +791,15 @@ void update_motcon(motiontype *p, odotype *o){
 
 		break;
 
-	case mot_turn: // HERE WE ALREADY KNOW OUR DESIRED ANGLE!
-		// This will make a hard turn
-		if (p->angle > 0) //Left turn
+	case mot_turn:
+		// This will make a hard turn / relative to the robot itself.
+		if (p->angle > 0){ // left turn
+			printf("Doing a left turn :D\n");
 
-		{
 			//p->motorspeed_l = 0;
 			if (p->right_pos - p->startpos < (p->angle)/2 * p->w)
 			{ // Havent reach desired angle yet.
+				printf("Still needs to turn: speedcmd=%f, desired angle=%f \n", p->speedcmd, p->angle);
 				p->motorspeed_r = (p->speedcmd)/2;
 				//
 				p->motorspeed_l = -(p->speedcmd)/2;
@@ -1063,7 +1095,6 @@ int turn(double angle, double speed, int time)
 	else
 		return mot.finished;
 }
-
 
 
 
