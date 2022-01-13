@@ -163,7 +163,7 @@ int follow_line(int condition_type, double condition, char linetype, double spee
 
 void linesensor_normalizer(int  linedata[8]);
 void irsensor_transformer(int irdata[5], float irdistances[5]);
-float center_of_gravity(int linedata[8]);
+float center_of_gravity(int linedata[8], char color);
 int lowest_intensity(int linedata[8], char followleft);
 int crossingblackline(int linedata[8] );
 
@@ -187,6 +187,7 @@ motiontype mot;
 enum
 {
 	ms_init,
+	ms_houston,
 	ms_fwd,
 	ms_drive,
 	ms_turn,
@@ -199,7 +200,8 @@ enum
 enum linetypes {
 	br,
 	bl,
-	bm
+	bm,
+	wm
 };
 
 
@@ -236,11 +238,14 @@ void write_laser_log(double laserpar[10]){
 
 
 int main(){
-	int running, n = 0, arg, time = 0, m = 0;
+	int running, arg, time = 0;
 	double dist = 0, angle = 0, speed = 0, condition_param = 0;
-	double control_angle = 0;
 	char linetype = 0; // 0 for br, 1 for bl, 2 for cg
 	int condition = -1; // -1 means no condition
+	// Mission array
+	int j = 0;
+	int mission_lenght = 0;
+	double missions[100][7];
 	remove("/home/smr/offline/square/laserpar.dat"); //remove file for write_laser_log
 
 	/* Establish connection to robot sensors and actuators.
@@ -407,16 +412,9 @@ int main(){
 		switch (mission.state)
 		{
 		case ms_init:
-			n = 1; //4
-			m = 1;
-			dist = 3;
-			speed = 0.2; // 0.2 0.4 0.6
-			angle = 149 * M_PI/180;
-			control_angle = 75 * M_PI/180;
+			// Turn: might be bugged!
 
-			// Turn
-
-			// Fwd
+			// Fwd: what about negative distance?
 
 			// Direction control
 
@@ -437,46 +435,74 @@ int main(){
 			condition = crossingblack;
 			condition_param = 0;
 
+
+			// MISSION ARRAY: ms, cond, condparam, speed, linetype, distance, angle
+			mission.state = ms_houston;
+			mission_lenght = 2;
+			j = 0;
+			// followline "br" @v 0.2 : (irdistfrontmiddle < 0.2)
+			missions[0][0] = ms_followline;
+			missions[0][1] = irdistfrontmiddle;
+			missions[0][2] = 0.2;
+			missions[0][3] = 0.2,
+			missions[0][4] = br;
+			missions[0][5] = 0;
+			missions[0][6] = 0;
+
+			// turn 180 degrees
+			//mission[1] = {ms_turn, 0, 0, 0.2, 0, 0, 180};
+			missions[1][0] = ms_turn;
+			missions[1][1] = 0;
+			missions[1][2] = 0;
+			missions[1][3] = 0.2,
+			missions[1][4] = 0;
+			missions[1][5] = 0;
+			missions[1][6] = 180*M_PI/180;
 			break;
-	
-		case ms_fwd:
-			//printf("ms_fwd!\n");
-			if (fwd(dist, speed, mission.time))
+
+		case ms_houston:
+			if(j==mission_lenght){
+				printf("All missions complete\n");
 				mission.state = ms_end;
+				break;
+			}
+			mission.state = missions[j][0]; 
+			condition = missions[j][1];
+			condition_param = missions[0][2];
+			speed = missions[j][3];
+			linetype = missions[j][4];
+			dist = missions[j][5];
+			angle = missions[j][6];
+			printf("Current mission: %d\n", mission.state);
+			j+=1;
+			break;
+		case ms_fwd:
+			if (fwd(dist, speed, mission.time))
+				mission.state = ms_houston;
 			break;
 		
 		case ms_drive:
 			if (drive(condition, condition_param, speed, mission.time))
-				mission.state = ms_end;
+				mission.state = ms_houston;
 			break;
 
 		case ms_followline:
 			if (follow_line(condition, condition_param, linetype, speed, mission.time))
-				mission.state = ms_end;
+				mission.state = ms_houston;
 			break;
 
 
 		case ms_direction_control:
 			//printf("ms_direction_control!\n");
-			if (dc(dist, speed, control_angle, mission.time)){
-				m = m - 1;
-				if (m == 0){
-					mission.state = ms_end; 
-				}else{
-					mission.state = ms_fwd;
-				}
+			if (dc(dist, speed, angle, mission.time)){
+				mission.state = ms_houston;
 			}
 			break;
 
 		case ms_turn:
 			//printf("ms_turn!\n");
-			if (turn(angle, speed, mission.time))
-			{
-				n = n - 1;
-				if (n == 0)
-					mission.state = ms_direction_control; //ms_end
-				else
-					mission.state = ms_fwd;
+			if (turn(angle, speed, mission.time)){
+				mission.state = ms_houston;
 			}
 			break;
 
@@ -761,12 +787,9 @@ void update_motcon(motiontype *p, odotype *o){
 
 		break;
 
-	case mot_turn: // HERE WE ALREADY KNOW OUR DESIRED ANGLE!
-		// This will make a hard turn
-		if (p->angle > 0) //Left turn
-
-		{
-			//p->motorspeed_l = 0;
+	case mot_turn:
+		// This will make a hard turn / relative to the robot itself.
+		if (p->angle > 0){ // left turn
 			if (p->right_pos - p->startpos < (p->angle)/2 * p->w)
 			{ // Havent reach desired angle yet.
 				p->motorspeed_r = (p->speedcmd)/2;
@@ -811,9 +834,10 @@ void update_motcon(motiontype *p, odotype *o){
 		linesensor_normalizer(odo.linesensor);
 
 		// 2 - do the simple lowest intensity algorithm "fl"
-		// 0 for br, 1 for bl, 2 for cg
-		if (p->linetype==2){ // center of gravity
-			dV = 0.1 * (3.5 - center_of_gravity(odo.linesensor));
+		if (p->linetype==bm){ // center of gravity
+			dV = 0.1 * (3.5 - center_of_gravity(odo.linesensor, 0));
+		}else if(p->linetype==wm){
+			dV = 0.1 * (3.5 - center_of_gravity(odo.linesensor, 1));
 		}else{
 			dV = 0.1 * (3.5 - lowest_intensity(odo.linesensor, p->linetype));
 		}
@@ -974,14 +998,13 @@ int lowest_intensity(int linedata[8], char followleft){
 	return center_index;
 }
 
-float center_of_gravity(int linedata[8]){
-	//TODO: what happens when the line is lost?
+float center_of_gravity(int linedata[8], char color){
 	// Assuming boolean intensity values
 	// Finds the average index of zero values.
 	int min_index_sum = 0;
 	int min_index_count = 0;
 	for (int i = 0; i < 8; i ++){
-		if (linedata[i] == 0){
+		if (linedata[i] == color){ // 0 for black, 1 for light
 			min_index_sum += i;
 			min_index_count++;
 		}
@@ -1090,7 +1113,6 @@ int turn(double angle, double speed, int time)
 	else
 		return mot.finished;
 }
-
 
 
 
