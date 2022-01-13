@@ -121,6 +121,8 @@ typedef struct
 	int condition_type;
 	// The IR distance required to maintain a condition
 	double ir_dist;
+	//Index of laser used
+	int laser_index;
 } motiontype;
 
 void reset_odo(odotype *p);
@@ -151,7 +153,8 @@ enum conditions{
 	irdistleft_less,  //<	
 	irdistleft_more,   //>
 	crossingblack,
-	foundBlackLine
+	foundBlackLine,
+	foundGate
 };
 
 void update_motcon(motiontype *p, odotype *o);
@@ -166,19 +169,16 @@ int follow_line(int condition_type, double condition, char linetype, double spee
 void linesensor_normalizer(int  linedata[8]);
 void linesensor_normalizer_2(int linedata[8], float line_intensity[8]);
 void irsensor_transformer(int irdata[5], float irdistances[5]);
-<<<<<<< HEAD
-float center_of_gravity(int linedata[8], char color);
-int lowest_intensity(int linedata[8], char followleft);
+
+float center_of_gravity(float linedata[8], char color);
+int lowest_intensity(float linedata[8], char followleft);
 int crossingblackline(int linedata[8] );
 int blackLineFound(int linedata[8], int amountOfBlack);
 int checkCondition(motiontype *p, odotype *o);
-=======
-float center_of_gravity(float linedata[8], char color);
-int lowest_intensity(float linedata[8], char followleft);
-int crossingblackline(int linedata[8]);
+int gateFound(int index); 
 void command(double missions[100][7], int mission, int condition,
- double condition_parameter, double speed, int linetype, double distance, double angle);
->>>>>>> 999ca07cc975201a0366d5e6f90df1f5579d64f8
+double condition_parameter, double speed, int linetype, double distance, double angle);
+
 
 typedef struct
 {
@@ -451,15 +451,16 @@ int main(){
 
 			// MISSION ARRAY: ms, cond, condparam, speed, linetype, distance, angle
 			mission.state = ms_houston;
-			mission_lenght = 5;
+			mission_lenght = 1;
 			j = 0;
 
 			// Obstacle 5
+			//command(missions, ms_followline, foundGate, 0, 0.2, bm, 0, 0);
 			command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
-			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
-			command(missions, ms_followline, crossingblack, 0, 0.2, wm, 0, 0);
-			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
+			//command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
+			//command(missions, ms_followline, crossingblack, 0, 0.2, wm, 0, 0);
+			//command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
+			//command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
 			break;
 
 		case ms_houston:
@@ -852,14 +853,17 @@ void update_motcon(motiontype *p, odotype *o){
 		
 		}else if(p->condition_type==irdistfrontmiddle){
 			// Fill irdistances with meter data
+			
 			irsensor_transformer(odo.irsensor, irdistances);
 			go_on = (p->ir_dist) < (irdistances[2]);
 		}else if(p->condition_type==crossingblack){
 			// Fill irdistances with meter data
 			go_on=!crossingblackline(odo.linesensor);
-		}else if(p->condition_type==blackLineFound){
+		}else if(p->condition_type==foundBlackLine){
 			// Fill irdistances with meter data
 			go_on=!blackLineFound(odo.linesensor,1);
+		}else if(p->condition_type == foundGate){
+			go_on = !gateFound(p->laser_index);
 		}
 
 		// Go on or stop
@@ -1081,8 +1085,10 @@ int follow_line(int condition_type, double condition, char linetype, double spee
 		}
 		else if(condition_type==irdistfrontmiddle){
 			mot.ir_dist = condition;
-		}
-		else if(!condition_type==crossingblack || !condition_type == foundBlackLine){
+		}else if(condition_type == foundGate){
+			mot.laser_index = condition; 
+
+		}else if(!(condition_type==crossingblack) || !(condition_type == foundBlackLine)){
 			printf("Wrong condition type inserted.\n");
 		}
 		
@@ -1179,6 +1185,7 @@ int blackLineFound(int linedata[8],int amountOfBlack ){ //Takes line data, and h
 	return 0; 
 }  
 
+/*
 int checkCondition(motiontype *p, odotype *o){
 	int d; 
 	char go_on=0;
@@ -1188,7 +1195,7 @@ int checkCondition(motiontype *p, odotype *o){
 		
 	}else if(p->condition_type==irdistfrontmiddle){
 		// Fill irdistances with meter data
-		irsensor_transformer(odo.irsensor, irdistances);
+		//irsensor_transformer(odo.irsensor, irdistances);
 		go_on = (p->ir_dist) < (irdistances[2]);
 	}else if(p->condition_type==crossingblack){
 
@@ -1197,4 +1204,31 @@ int checkCondition(motiontype *p, odotype *o){
 		go_on=!blackLineFound(odo.linesensor,1);
 	}
 	return go_on; 
+}
+*/
+
+int gateFound(int index){ 
+	printf("running getFound");
+	//static double nearestGate[2] = {-1.0,-1.0}; 
+	static double closeObject = 1000.0;
+	double errorMargin = 0.1; 
+	//static double last_x = -1.0; 
+	//static double last_y = -1.0;
+
+	int maxDist = 1; 
+	
+
+	if((closeObject -laserpar[index] )> errorMargin){
+		//last_x = sin(degree * index)*laserpar[index]; 
+		//last_y = cos(degree * index) / laserpar[index];
+		closeObject = laserpar[index]; 
+	
+	}else if (laserpar[index]< maxDist && (laserpar[index] - closeObject) > errorMargin){ //gap found
+			printf("found gate");
+			closeObject = 1000.0; 
+			//last_x = -1.0; 
+			return 1;
+
+	}
+	return 0; 
 }
