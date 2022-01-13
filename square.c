@@ -167,7 +167,9 @@ void linesensor_normalizer_2(int linedata[8], float line_intensity[8]);
 void irsensor_transformer(int irdata[5], float irdistances[5]);
 float center_of_gravity(float linedata[8], char color);
 int lowest_intensity(float linedata[8], char followleft);
-int crossingblackline(int linedata[8] );
+int crossingblackline(int linedata[8]);
+void command(double missions[100][7], int mission, int condition,
+ double condition_parameter, double speed, int linetype, double distance, double angle);
 
 typedef struct
 {
@@ -443,47 +445,11 @@ int main(){
 			mission_lenght = 5;
 			j = 0;
 			// followline "br" @v 0.2 : (irdistfrontmiddle < 0.2)
-			missions[0][0] = ms_followline;
-			missions[0][1] = crossingblack;
-			missions[0][2] = 0;
-			missions[0][3] = 0.2,
-			missions[0][4] = bm;
-			missions[0][5] = 0;
-			missions[0][6] = 0;
-
-			missions[1][0] = ms_fwd;
-			missions[1][1] = 0;
-			missions[1][2] = 0;
-			missions[1][3] = 0.1,
-			missions[1][4] = 0;
-			missions[1][5] = 0.2;
-			missions[1][6] = 0;
-
-			missions[2][0] = ms_followline;
-			missions[2][1] = crossingblack;
-			missions[2][2] = 0;
-			missions[2][3] = 0.2,
-			missions[2][4] = wm;
-			missions[2][5] = 0;
-			missions[2][6] = 0;
-
-			missions[3][0] = ms_fwd;
-			missions[3][1] = 0;
-			missions[3][2] = 0;
-			missions[3][3] = 0.2,
-			missions[3][4] = 0;
-			missions[3][5] = 0.2;
-			missions[3][6] = 0;
-
-			missions[4][0] = ms_turn;
-			missions[4][1] = 0;
-			missions[4][2] = 0;
-			missions[4][3] = 0.2,
-			missions[4][4] = 0;
-			missions[4][5] = 0;
-			missions[4][6] = -90*M_PI/180;
-
-
+			command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
+			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
+			command(missions, ms_followline, crossingblack, 0, 0.2, wm, 0, 0);
+			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
+			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
 			break;
 
 		case ms_houston:
@@ -726,7 +692,6 @@ void update_motcon(motiontype *p, odotype *o){
 		// We need to deaccelerate
 		if ((deaccel_flag) || (p->currentspeed >= sqrt(2 * max_acceleration * d))){ 
 			if (!deaccel_flag){
-				printf("The flag has been hoisted!\n");
 				deaccel_flag = 1;
 			}
 			
@@ -785,7 +750,6 @@ void update_motcon(motiontype *p, odotype *o){
 		// We need to deaccelerate
 		if ((deaccel_flag) || (p->currentspeed >= sqrt(2 * max_acceleration * d))){ 
 			if (!deaccel_flag){
-				printf("The flag has been hoisted!\n");
 				deaccel_flag = 1;
 			}
 			
@@ -1052,7 +1016,6 @@ float center_of_gravity(float linedata[8], char color){
 	return ((float)min_index_sum)/((float)min_index_count);
 }
 
-
 int dc(double dist, double speed, double angle, int time){
 	if (time == 0){
 		mot.cmd = mot_direction_control;
@@ -1147,6 +1110,22 @@ int turn(double angle, double speed, int time)
 		return mot.finished;
 }
 
+
+void command(double missions[100][7], int mission, int condition,
+ double condition_parameter, double speed, int linetype, double distance, double angle){
+		static int command_no = 0;
+			
+		missions[command_no][0] = mission;
+		missions[command_no][1] = condition;
+		missions[command_no][2] = condition_parameter;
+		missions[command_no][3] = speed,
+		missions[command_no][4] = linetype;
+		missions[command_no][5] = distance;
+		missions[command_no][6] = angle;
+
+		command_no += 1;
+
+}
 
 
 void sm_update(smtype *p)
