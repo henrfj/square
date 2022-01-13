@@ -444,7 +444,8 @@ int main(){
 			mission.state = ms_houston;
 			mission_lenght = 5;
 			j = 0;
-			// followline "br" @v 0.2 : (irdistfrontmiddle < 0.2)
+
+			// Obstacle 5
 			command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
 			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
 			command(missions, ms_followline, crossingblack, 0, 0.2, wm, 0, 0);
@@ -1113,6 +1114,7 @@ int turn(double angle, double speed, int time)
 
 void command(double missions[100][7], int mission, int condition,
  double condition_parameter, double speed, int linetype, double distance, double angle){
+		
 		static int command_no = 0;
 			
 		missions[command_no][0] = mission;
