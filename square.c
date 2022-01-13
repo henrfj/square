@@ -149,7 +149,8 @@ enum conditions{
 	irdistright_more, //>
 	irdistleft_less,  //<	
 	irdistleft_more,   //>
-	crossingblack
+	crossingblack,
+	foundBlackLine
 };
 
 void update_motcon(motiontype *p, odotype *o);
@@ -166,6 +167,8 @@ void irsensor_transformer(int irdata[5], float irdistances[5]);
 float center_of_gravity(int linedata[8], char color);
 int lowest_intensity(int linedata[8], char followleft);
 int crossingblackline(int linedata[8] );
+int blackLineFound(int linedata[8], int amountOfBlack);
+int checkCondition(motiontype *p, odotype *o);
 
 typedef struct
 {
@@ -855,7 +858,9 @@ void update_motcon(motiontype *p, odotype *o){
 		}else if(p->condition_type==crossingblack){
 			// Fill irdistances with meter data
 			go_on=!crossingblackline(odo.linesensor);
-
+		}else if(p->condition_type==blackLineFound){
+			// Fill irdistances with meter data
+			go_on=!blackLineFound(odo.linesensor,1);
 		}
 
 		// Go on or stop
@@ -1074,12 +1079,10 @@ int follow_line(int condition_type, double condition, char linetype, double spee
 		else if(condition_type==irdistfrontmiddle){
 			mot.ir_dist = condition;
 		}
-		else if(condition_type==crossingblack){
-			mot.dist=2; 
-		}
-		else{
+		else if(!condition_type==crossingblack || !condition_type == foundBlackLine){
 			printf("Wrong condition type inserted.\n");
 		}
+		
 		
 		return 0;
 
@@ -1136,10 +1139,42 @@ int crossingblackline(int linedata[8] ){
 		if (linedata[i]!=0){
 			return 0;
 		}
-		
 	}
 	if (linedata[0]==0|| linedata[7]==0){
 			return 1;
 	}
 	return 0; //returns 1 if blackcrossing is detected else return 0
 }  
+
+int blackLineFound(int linedata[8],int amountOfBlack ){ //Takes line data, and how much black is a line should be 1 or 2 
+	int sum = 0;
+	for (int i=0;i<8;i++){
+		if (linedata[i]==0){
+			sum++;
+		}
+	}
+	if (sum >= amountOfBlack){
+		return 1; //Return 1 if enough black is spotted 
+	}
+	return 0; 
+}  
+
+int checkCondition(motiontype *p, odotype *o){
+	int d; 
+	char go_on=0;
+	if (p->condition_type==drivendist){
+		d = p->dist - o->traveldist; //distance left
+		go_on = (d>0);
+		
+	}else if(p->condition_type==irdistfrontmiddle){
+		// Fill irdistances with meter data
+		irsensor_transformer(odo.irsensor, irdistances);
+		go_on = (p->ir_dist) < (irdistances[2]);
+	}else if(p->condition_type==crossingblack){
+
+		go_on=!crossingblackline(odo.linesensor);
+	}else if(p->condition_type==blackLineFound){
+		go_on=!blackLineFound(odo.linesensor,1);
+	}
+	return go_on; 
+}
