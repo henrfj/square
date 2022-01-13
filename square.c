@@ -195,6 +195,12 @@ enum
 	ms_followline_ir
 };
 
+enum linetypes {
+	br,
+	bl,
+	bm
+};
+
 
 void write_log(double log[MAXINT][7]) //here
 {
@@ -407,23 +413,34 @@ int main(){
 			angle = 149 * M_PI/180;
 			control_angle = 75 * M_PI/180;
 
+			// Turn
+
+			// Fwd
+
+			// Direction control
+
 			// Using followline
 			mission.state = ms_followline;
-			linetype = 0; // 0 for br, 1 for bl, 2 for cg
-			condition = drivendist; //drivendist, irdistfrontmiddle
-			condition_param = dist; //dist;
+			linetype = br; // 0 for br, 1 for bl, 2 for bm
+			condition = irdistfrontmiddle; //drivendist, irdistfrontmiddle
+			condition_param = 0.2; //dist;
 
 			// Using drive
 			mission.state = ms_drive;
-			condition = drivendist; // drivendist, irdistfrontmiddle
-			condition_param = dist; // dist, 0.2
+			condition = irdistfrontmiddle; // drivendist, irdistfrontmiddle
+			condition_param = 0.2; // dist, 0.2
+
+			// Drive using the ir_right
+			mission.state = ms_drive;
+			speed = 0.1; 
+			condition = irdistright_more;
+			condition_param = 0.7;
+
 			break;
 	
 		case ms_fwd:
 			//printf("ms_fwd!\n");
 			if (fwd(dist, speed, mission.time))
-				//mission.state = ms_turn;
-				//mission.state = ms_direction_control;
 				mission.state = ms_end;
 			break;
 		
@@ -685,14 +702,31 @@ void update_motcon(motiontype *p, odotype *o){
 	case mot_drive:
 		/* Moving forward, with acceleration, under certain conditions */
 		d = 0;
+		
 		if(p->condition_type==drivendist){
 			driven_dist = (p->right_pos + p->left_pos) / 2 - p->startpos; 
 			d = p->dist - driven_dist; 						// remaining distance
+
 		}else if(p->condition_type==irdistfrontmiddle){
 			irsensor_transformer(odo.irsensor, irdistances);
 			d = irdistances[2] - p->ir_dist; 
+
+		}else if(p->condition_type==irdistright_more){
+			d = 20; // Make sure it never reaches it.
+			irsensor_transformer(odo.irsensor, irdistances);
+			//printf("Ir-right: %f \tp->ir_dist %f \t Bool: %d\n", irdistances[4], p->ir_dist, (irdistances[4] > p->ir_dist));
+
+			if (irdistances[4] > p->ir_dist){
+				deaccel_flag=1;
+			}
+
+		}else{
+			printf("You have not set a proper condition. RIP!\n");
+			exit(-1);
 		}
-		printf("Remaining distance:\t %f \t Driven distance: %f\n", d, odo.x_pos);
+
+
+		//printf("Remaining distance:\t %f \t Driven distance: %f\n", d, odo.x_pos);
 
 		// We need to deaccelerate
 		if ((deaccel_flag) || (p->currentspeed >= sqrt(2 * max_acceleration * d))){ 
@@ -963,6 +997,9 @@ int drive(int condition_type, double condition, double speed, int time){
 			mot.dist = condition;
 		}
 		else if(condition_type==irdistfrontmiddle){
+			mot.ir_dist = condition;
+
+		}else if(condition_type==irdistright_more){
 			mot.ir_dist = condition;
 		}
 		else{
