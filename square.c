@@ -996,7 +996,6 @@ void update_motcon(motiontype *p, odotype *o){
 			go_on = (p->ir_dist) > (irdistances[4]);
 
 			actual_dist = irdistances[4] * sin(M_PI/2 - (fabs(o->theta - p->startangle)));
-
 			dV = hug_gain * (p->dist - actual_dist);
 			//printf("Current angle: %f\t Startangle: %f \t Actual dist: %f \t theta3 %f \tdV: %f\n", o->theta, p->startangle, actual_dist, M_PI/2 - (o->theta - p->startangle), dV);
 
@@ -1005,7 +1004,8 @@ void update_motcon(motiontype *p, odotype *o){
 			irsensor_transformer(odo.irsensor, irdistances);
 			go_on = (p->ir_dist) > (irdistances[0]);
 
-			dV = hug_gain * (p->dist - irdistances[0]);
+			actual_dist = irdistances[0] * sin(M_PI/2 - (fabs(o->theta - p->startangle)));
+			dV = hug_gain * (p->dist - actual_dist);
 
 		}
 
