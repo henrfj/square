@@ -462,6 +462,7 @@ int main(){
 
 			/////////////////////    MISSIONS    ///////////////////// 
 			// Obstacle 5
+<<<<<<< HEAD
 			command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
 			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
 			command(missions, ms_followline, crossingblack, 0, 0.2, wm, 0, 0);
@@ -469,6 +470,8 @@ int main(){
 			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
 			
 			/*
+=======
+>>>>>>> 60c19836823e4bb4b4a254474a742e1d7455fb47
 			// followline "bm" @v 0.2 : ($crossingblackline==1)
 			cmd_followline(missions, bm, 0.2, crossingblack, 0);
 
@@ -483,7 +486,11 @@ int main(){
 
 			// turnr 0.10 30
 			cmd_turnr(missions, 0.2, -90); //ONLY DEGREES NEEDED
+<<<<<<< HEAD
 			*/
+=======
+
+>>>>>>> 60c19836823e4bb4b4a254474a742e1d7455fb47
 
 			/////////////////    END OF MISSIONS    /////////////////
 			break;
