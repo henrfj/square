@@ -433,21 +433,21 @@ int main(){
 			// Direction control
 
 			// Using followline
-			mission.state = ms_followline;
-			linetype = br; // 0 for br, 1 for bl, 2 for bm
-			condition = irdistfrontmiddle; //drivendist, irdistfrontmiddle
-			condition_param = 0.2; //dist;
+			//mission.state = ms_followline;
+			//linetype = br; // 0 for br, 1 for bl, 2 for bm
+			//condition = irdistfrontmiddle; //drivendist, irdistfrontmiddle
+			//condition_param = 0.2; //dist;
 
 			// Using drive
-			mission.state = ms_drive;
-			condition = irdistfrontmiddle; // drivendist, irdistfrontmiddle
-			condition_param = 0.2; // dist, 0.2
+			//mission.state = ms_drive;
+			//condition = irdistfrontmiddle; // drivendist, irdistfrontmiddle
+			//condition_param = 0.2; // dist, 0.2
 
 			// Drive using follow br and stopping blackcoss
-			mission.state = ms_followline;
-			speed = 0.2; 
-			condition = crossingblack;
-			condition_param = 0;
+			//mission.state = ms_followline;
+			//speed = 0.2; 
+			//condition = crossingblack;
+			//condition_param = 0;
 
 
 			// MISSION ARRAY: ms, cond, condparam, speed, linetype, distance, angle
@@ -455,18 +455,35 @@ int main(){
 			mission_lenght = 5;
 			j = 0;
 
+			// Obstacle 1
+			command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.12, br, 0, 0);
+			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 180*M_PI/180);
+			command(missions, ms_followline, drivendist, 0, 0.15, 0, 0.7, 0);
+			command(missions, ms_followline, crossingblack, 0, 0.15, bm, 0, 0);
+			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 180*M_PI/180);
+			
+			// Obstacle 2
+			
+			// Obstacle 3
+			
+			// Obstacle 4
+			
 			// Obstacle 5
 			//command(missions, ms_followline, foundGate, 0, 0.2, bm, 0, 0);
-			command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
-			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
-			command(missions, ms_followline, crossingblack, 0, 0.2, wm, 0, 0);
-			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
+			//command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
+			//command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
+			//command(missions, ms_followline, crossingblack, 0, 0.2, wm, 0, 0);
+			//command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
+			//command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
 			break;
 
 		case ms_houston:
+			if (j==1){
+				printf("boxdist= %f\n",(odo.x_pos+0.2+0.26));
+			}
 			if(j==mission_lenght){
 				printf("All missions complete\n");
+				
 				mission.state = ms_end;
 				break;
 			}
@@ -478,6 +495,9 @@ int main(){
 			dist = missions[j][5];
 			angle = missions[j][6];
 			print_cmd(mission.state); //Current mission: number
+			//if (j==0){
+			//	printf("boxdist= %f\n",(odo.y_pos+0.2+0.26));
+			//}
 			j+=1;
 			break;
 		case ms_fwd:
@@ -854,7 +874,6 @@ void update_motcon(motiontype *p, odotype *o){
 		
 		}else if(p->condition_type==irdistfrontmiddle){
 			// Fill irdistances with meter data
-			
 			irsensor_transformer(odo.irsensor, irdistances);
 			go_on = (p->ir_dist) < (irdistances[2]);
 		}else if(p->condition_type==crossingblack){
@@ -1142,7 +1161,7 @@ void command(double missions[100][7], int mission, int condition,
 		missions[command_no][6] = angle;
 
 		command_no += 1;
-
+ 
 }
 
 
