@@ -455,23 +455,23 @@ int main(){
 
 			// MISSION ARRAY: ms, cond, condparam, speed, linetype, distance, angle
 			mission.state = ms_houston;
-			mission_lenght = 5;
+			mission_lenght = 3;
 			j = 0;
 
 			// Obstacle 3
-			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
-			//command(missions, ms_followline, foundGate, 0, 0.1, bm, 0, 0);
-	
-			//command(missions, ms_followline, foundGate, 0, 0.1, bm, 0, 0);
+			//command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
+			command(missions, ms_followline, foundGate, 0, 0.1, bm, 0, 0);
+			command(missions, ms_followline, drivendist, 0.2, 0.1, bm, 0, 0);
+			command(missions, ms_followline, foundGate, 0, 0.1, bm, 0, 0);
 
 
 			// Obstacle 5
 
-			command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
-			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
-			command(missions, ms_followline, crossingblack, 0, 0.2, wm, 0, 0);
-			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
+			//command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
+			//command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
+			//command(missions, ms_followline, crossingblack, 0, 0.2, wm, 0, 0);
+			//command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
+			//command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
 			break;
 
 		case ms_houston:
