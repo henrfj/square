@@ -123,6 +123,8 @@ typedef struct
 	double ir_dist;
 	//Index of laser used
 	int laser_index;
+	//x dist to gate
+	double lenghtToGate; 
 } motiontype;
 
 void reset_odo(odotype *p);
@@ -154,7 +156,8 @@ enum conditions{
 	irdistleft_more,   //>
 	crossingblack,
 	foundBlackLine,
-	foundGate
+	foundGate,
+	middleOfGate
 };
 
 void update_motcon(motiontype *p, odotype *o);
@@ -451,13 +454,20 @@ int main(){
 
 			// MISSION ARRAY: ms, cond, condparam, speed, linetype, distance, angle
 			mission.state = ms_houston;
-			mission_lenght = 1;
+			mission_lenght = 3;
 			j = 0;
 
+			// Obstacle 3
+			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
+			//command(missions, ms_followline, foundGate, 0, 0.1, bm, 0, 0);
+	
+			//command(missions, ms_followline, foundGate, 0, 0.1, bm, 0, 0);
+
+
 			// Obstacle 5
-			//command(missions, ms_followline, foundGate, 0, 0.2, bm, 0, 0);
+
 			command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
-			//command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
+			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
 			//command(missions, ms_followline, crossingblack, 0, 0.2, wm, 0, 0);
 			//command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
 			//command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
@@ -863,7 +873,7 @@ void update_motcon(motiontype *p, odotype *o){
 			// Fill irdistances with meter data
 			go_on=!blackLineFound(odo.linesensor,1);
 		}else if(p->condition_type == foundGate){
-			go_on = !gateFound(p->laser_index);
+			go_on = !(gateFound(p->laser_index));
 		}
 
 		// Go on or stop
@@ -1087,7 +1097,6 @@ int follow_line(int condition_type, double condition, char linetype, double spee
 			mot.ir_dist = condition;
 		}else if(condition_type == foundGate){
 			mot.laser_index = condition; 
-
 		}else if(!(condition_type==crossingblack) || !(condition_type == foundBlackLine)){
 			printf("Wrong condition type inserted.\n");
 		}
@@ -1206,12 +1215,12 @@ int checkCondition(motiontype *p, odotype *o){
 	return go_on; 
 }
 */
-
+/*
 int gateFound(int index){ 
-	printf("running getFound");
+	printf("lida 0 data %f\n",laserpar[0]);
 	//static double nearestGate[2] = {-1.0,-1.0}; 
 	static double closeObject = 1000.0;
-	double errorMargin = 0.1; 
+	double errorMargin = 0.5; 
 	//static double last_x = -1.0; 
 	//static double last_y = -1.0;
 
@@ -1219,6 +1228,7 @@ int gateFound(int index){
 	
 
 	if((closeObject -laserpar[index] )> errorMargin){
+		printf("found close object");
 		//last_x = sin(degree * index)*laserpar[index]; 
 		//last_y = cos(degree * index) / laserpar[index];
 		closeObject = laserpar[index]; 
@@ -1229,6 +1239,16 @@ int gateFound(int index){
 			//last_x = -1.0; 
 			return 1;
 
+	}
+	return 0; 
+}
+*/
+int gateFound(int index){ 
+	printf("lida 0 data %f\n",laserpar[0]);
+	if(0.6 > laserpar[index] && laserpar[index]> 0){
+	
+		printf("found gate \n");
+		return 1; 
 	}
 	return 0; 
 }
