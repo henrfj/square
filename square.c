@@ -178,6 +178,13 @@ int checkCondition(motiontype *p, odotype *o);
 int gateFound(int index); 
 void command(double missions[100][7], int mission, int condition,
 double condition_parameter, double speed, int linetype, double distance, double angle);
+int update_command_no();
+void cmd_followline(double missions[100][7],int linetype, double speed, int condition,
+ double condition_parameter);
+void cmd_drive(double missions[100][7], int condition,
+    double condition_parameter, double speed);
+void cmd_fwd(double missions[100][7], double distance, double speed);
+void cmd_turnr(double missions[100][7], double speed, double angle);
 
 
 typedef struct
@@ -451,16 +458,32 @@ int main(){
 
 			// MISSION ARRAY: ms, cond, condparam, speed, linetype, distance, angle
 			mission.state = ms_houston;
-			mission_lenght = 5;
 			j = 0;
+
+			/////////////////////    MISSIONS    ///////////////////// 
+			mission_lenght = 5;
 
 			// Obstacle 5
 			//command(missions, ms_followline, foundGate, 0, 0.2, bm, 0, 0);
-			command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
-			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
-			command(missions, ms_followline, crossingblack, 0, 0.2, wm, 0, 0);
-			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
+			// command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
+			// command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
+			// command(missions, ms_followline, crossingblack, 0, 0.2, wm, 0, 0);
+			// command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
+			// command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
+
+			// Obstacle 5:
+			// followline "bm" @v 0.2 : ($crossingblackline==1)
+			cmd_followline(missions, bm, 0.2, crossingblack, 0);
+			// fwd 0.1 @v0.2
+			cmd_fwd(missions, 0.2, 0.1);
+			// followline "wm" @v 0.2 : ($crossingblackline==1)
+			cmd_followline(missions, wm, 0.2, crossingblack, 0);
+			// fwd 0.1 @v0.2
+			cmd_fwd(missions, 0.2, 0.1);
+			// turnr 0.10 30
+			cmd_turnr(missions, 0.2, -90); //only degrees angle
+
+			/////////////////    END OF MISSIONS    /////////////////
 			break;
 
 		case ms_houston:
@@ -1126,6 +1149,66 @@ int turn(double angle, double speed, int time)
 		return mot.finished;
 }
 
+int update_command_no(){
+    static int command_no = 0;
+
+	static int init_flag = 0;
+
+	if (command_no==0 && init_flag==0){
+		init_flag = 1;
+		//printf("initialized and returned command_no: %d\n", command_no);
+		return command_no;
+	}
+    command_no++;
+	//printf("command_no: %d\n", command_no);
+    return command_no;
+}
+
+void cmd_followline(double missions[100][7],int linetype, double speed, int condition,
+ double condition_parameter){
+		int command_no = update_command_no();	
+		missions[command_no][0] = ms_followline;
+		missions[command_no][1] = condition;
+		missions[command_no][2] = condition_parameter;
+		missions[command_no][3] = speed;
+		missions[command_no][4] = linetype;
+        missions[command_no][5] = 0;
+		missions[command_no][6] = 0;
+}
+
+void cmd_drive(double missions[100][7], int condition,
+ double condition_parameter, double speed){
+		int command_no = update_command_no();	
+		missions[command_no][0] = ms_drive;
+		missions[command_no][1] = condition;
+		missions[command_no][2] = condition_parameter;
+		missions[command_no][3] = speed;
+		missions[command_no][4] = 0;
+		missions[command_no][5] = 0;
+		missions[command_no][6] = 0;
+}
+
+void cmd_fwd(double missions[100][7], double distance, double speed){
+		int command_no = update_command_no();	
+		missions[command_no][0] = ms_fwd;
+		missions[command_no][1] = 0;
+		missions[command_no][2] = 0;
+		missions[command_no][3] = speed,
+		missions[command_no][4] = 0;
+		missions[command_no][5] = distance;
+		missions[command_no][6] = 0;
+}
+
+void cmd_turnr(double missions[100][7], double speed, double angle){
+		int command_no = update_command_no();	
+		missions[command_no][0] = ms_turn;
+		missions[command_no][1] = 0;
+		missions[command_no][2] = 0;
+		missions[command_no][3] = speed,
+		missions[command_no][4] = 0;
+		missions[command_no][5] = 0;
+		missions[command_no][6] = angle*M_PI/180;
+}
 
 void command(double missions[100][7], int mission, int condition,
  double condition_parameter, double speed, int linetype, double distance, double angle){
