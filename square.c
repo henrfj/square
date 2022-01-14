@@ -35,6 +35,7 @@ double laserpar[10];
 void serverconnect(componentservertype *s);
 void xml_proc(struct xml_in *x);
 void xml_proca(struct xml_in *x);
+void print_cmd(int state);
 
 componentservertype lmssrv, camsrv;
 
@@ -123,6 +124,8 @@ typedef struct
 	double ir_dist;
 	//Index of laser used
 	int laser_index;
+	//x dist to gate
+	double lenghtToGate; 
 } motiontype;
 
 void reset_odo(odotype *p);
@@ -155,7 +158,8 @@ enum conditions{
 	irdistleft_more,   //>
 	crossingblack,
 	foundBlackLine,
-	foundGate
+	foundGate,
+	middleOfGate
 };
 
 void update_motcon(motiontype *p, odotype *o);
@@ -179,6 +183,13 @@ int checkCondition(motiontype *p, odotype *o);
 int gateFound(int index); 
 void command(double missions[100][7], int mission, int condition,
 double condition_parameter, double speed, int linetype, double distance, double angle);
+int update_command_no();
+void cmd_followline(double missions[100][7],int linetype, double speed, int condition,
+ double condition_parameter);
+void cmd_drive(double missions[100][7], int condition,
+    double condition_parameter, double speed);
+void cmd_fwd(double missions[100][7], double distance, double speed);
+void cmd_turnr(double missions[100][7], double speed, double angle);
 
 
 typedef struct
@@ -433,28 +444,40 @@ int main(){
 			// Direction control
 
 			// Using followline
-			mission.state = ms_followline;
-			linetype = br; // 0 for br, 1 for bl, 2 for bm
-			condition = irdistfrontmiddle; //drivendist, irdistfrontmiddle
-			condition_param = 0.2; //dist;
+			//mission.state = ms_followline;
+			//linetype = br; // 0 for br, 1 for bl, 2 for bm
+			//condition = irdistfrontmiddle; //drivendist, irdistfrontmiddle
+			//condition_param = 0.2; //dist;
 
 			// Using drive
-			mission.state = ms_drive;
-			condition = irdistfrontmiddle; // drivendist, irdistfrontmiddle
-			condition_param = 0.2; // dist, 0.2
+			//mission.state = ms_drive;
+			//condition = irdistfrontmiddle; // drivendist, irdistfrontmiddle
+			//condition_param = 0.2; // dist, 0.2
 
 			// Drive using follow br and stopping blackcoss
-			mission.state = ms_followline;
-			speed = 0.2; 
-			condition = crossingblack;
-			condition_param = 0;
+			//mission.state = ms_followline;
+			//speed = 0.2; 
+			//condition = crossingblack;
+			//condition_param = 0;
 
 
 			// MISSION ARRAY: ms, cond, condparam, speed, linetype, distance, angle
 			mission.state = ms_houston;
-			mission_lenght = 12;
+			mission_lenght = 5;
+
 			j = 0;
 
+			// Obstacle 1
+			command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.12, br, 0, 0);
+			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 180*M_PI/180);
+			command(missions, ms_followline, drivendist, 0, 0.15, 0, 0.7, 0);
+			command(missions, ms_followline, crossingblack, 0, 0.15, bm, 0, 0);
+			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 180*M_PI/180);
+			
+			// Obstacle 2
+			
+			// Obstacle 3
+			
 			// Obstacle 4
 			command(missions, ms_wallhug, irdistright_more, 0.8, 0.1, 0, 0.3, 0);
 			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.40, 0);
@@ -476,12 +499,32 @@ int main(){
 			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
 			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
 
+			/////////////////////    MISSIONS    ///////////////////// 
+			mission_lenght = 5;
+
+			// Obstacle 5:
+			// followline "bm" @v 0.2 : ($crossingblackline==1)
+			cmd_followline(missions, bm, 0.2, crossingblack, 0);
+			// fwd 0.1 @v0.2
+			cmd_fwd(missions, 0.2, 0.1);
+			// followline "wm" @v 0.2 : ($crossingblackline==1)
+			cmd_followline(missions, wm, 0.2, crossingblack, 0);
+			// fwd 0.1 @v0.2
+			cmd_fwd(missions, 0.2, 0.1);
+			// turnr 0.10 30
+			cmd_turnr(missions, 0.2, -90); //only degrees angle
+
+			/////////////////    END OF MISSIONS    /////////////////
 
 			break;
 
 		case ms_houston:
+			if (j==1){
+				printf("boxdist= %f\n",(odo.x_pos+0.2+0.26));
+			}
 			if(j==mission_lenght){
 				printf("All missions complete\n");
+				
 				mission.state = ms_end;
 				break;
 			}
@@ -492,7 +535,10 @@ int main(){
 			linetype = missions[j][4];
 			dist = missions[j][5];
 			angle = missions[j][6];
-			printf("Current mission: %d\n", mission.state);
+			print_cmd(mission.state); //Current mission: number
+			//if (j==0){
+			//	printf("boxdist= %f\n",(odo.y_pos+0.2+0.26));
+			//}
 			j+=1;
 			break;
 		case ms_fwd:
@@ -883,7 +929,6 @@ void update_motcon(motiontype *p, odotype *o){
 		
 		}else if(p->condition_type==irdistfrontmiddle){
 			// Fill irdistances with meter data
-			
 			irsensor_transformer(odo.irsensor, irdistances);
 			go_on = (p->ir_dist) < (irdistances[2]);
 		}else if(p->condition_type==crossingblack){
@@ -893,7 +938,7 @@ void update_motcon(motiontype *p, odotype *o){
 			// Fill irdistances with meter data
 			go_on=!blackLineFound(odo.linesensor,1);
 		}else if(p->condition_type == foundGate){
-			go_on = !gateFound(p->laser_index);
+			go_on = !(gateFound(p->laser_index));
 		}
 
 		// So the motor voltage is still operational IRL
@@ -1187,7 +1232,6 @@ int follow_line(int condition_type, double condition, char linetype, double spee
 			mot.ir_dist = condition;
 		}else if(condition_type == foundGate){
 			mot.laser_index = condition; 
-
 		}else if(!(condition_type==crossingblack) && !(condition_type == foundBlackLine)){
 			printf("Wrong condition type inserted.\n");
 		}
@@ -1248,6 +1292,66 @@ int turn(double angle, double speed, int time)
 		return mot.finished;
 }
 
+int update_command_no(){
+    static int command_no = 0;
+
+	static int init_flag = 0;
+
+	if (command_no==0 && init_flag==0){
+		init_flag = 1;
+		//printf("initialized and returned command_no: %d\n", command_no);
+		return command_no;
+	}
+    command_no++;
+	//printf("command_no: %d\n", command_no);
+    return command_no;
+}
+
+void cmd_followline(double missions[100][7],int linetype, double speed, int condition,
+ double condition_parameter){
+		int command_no = update_command_no();	
+		missions[command_no][0] = ms_followline;
+		missions[command_no][1] = condition;
+		missions[command_no][2] = condition_parameter;
+		missions[command_no][3] = speed;
+		missions[command_no][4] = linetype;
+        missions[command_no][5] = 0;
+		missions[command_no][6] = 0;
+}
+
+void cmd_drive(double missions[100][7], int condition,
+ double condition_parameter, double speed){
+		int command_no = update_command_no();	
+		missions[command_no][0] = ms_drive;
+		missions[command_no][1] = condition;
+		missions[command_no][2] = condition_parameter;
+		missions[command_no][3] = speed;
+		missions[command_no][4] = 0;
+		missions[command_no][5] = 0;
+		missions[command_no][6] = 0;
+}
+
+void cmd_fwd(double missions[100][7], double distance, double speed){
+		int command_no = update_command_no();	
+		missions[command_no][0] = ms_fwd;
+		missions[command_no][1] = 0;
+		missions[command_no][2] = 0;
+		missions[command_no][3] = speed,
+		missions[command_no][4] = 0;
+		missions[command_no][5] = distance;
+		missions[command_no][6] = 0;
+}
+
+void cmd_turnr(double missions[100][7], double speed, double angle){
+		int command_no = update_command_no();	
+		missions[command_no][0] = ms_turn;
+		missions[command_no][1] = 0;
+		missions[command_no][2] = 0;
+		missions[command_no][3] = speed,
+		missions[command_no][4] = 0;
+		missions[command_no][5] = 0;
+		missions[command_no][6] = angle*M_PI/180;
+}
 
 void command(double missions[100][7], int mission, int condition,
  double condition_parameter, double speed, int linetype, double distance, double angle){
@@ -1263,7 +1367,7 @@ void command(double missions[100][7], int mission, int condition,
 		missions[command_no][6] = angle;
 
 		command_no += 1;
-
+ 
 }
 
 
@@ -1328,12 +1432,12 @@ int checkCondition(motiontype *p, odotype *o){
 	return go_on; 
 }
 */
-
+/*
 int gateFound(int index){ 
-	printf("running getFound");
+	printf("lida 0 data %f\n",laserpar[0]);
 	//static double nearestGate[2] = {-1.0,-1.0}; 
 	static double closeObject = 1000.0;
-	double errorMargin = 0.1; 
+	double errorMargin = 0.5; 
 	//static double last_x = -1.0; 
 	//static double last_y = -1.0;
 
@@ -1341,6 +1445,7 @@ int gateFound(int index){
 	
 
 	if((closeObject -laserpar[index] )> errorMargin){
+		printf("found close object");
 		//last_x = sin(degree * index)*laserpar[index]; 
 		//last_y = cos(degree * index) / laserpar[index];
 		closeObject = laserpar[index]; 
@@ -1353,4 +1458,34 @@ int gateFound(int index){
 
 	}
 	return 0; 
+}
+*/
+int gateFound(int index){ 
+	printf("lida 0 data %f\n",laserpar[0]);
+	if(0.6 > laserpar[index] && laserpar[index]> 0){
+	
+		printf("found gate \n");
+		return 1; 
+	}
+	return 0; 
+}
+
+void print_cmd(int state)
+{
+	char list_of_states[15][50] = {"ms_init",
+	"ms_houston",
+	"ms_fwd",
+	"ms_drive",
+	"ms_turn",
+	"ms_end",
+	"ms_direction_control",
+	"ms_followline",
+	"ms_followline_ir",
+	"ms_hugwall",
+	"add_the_state_name_to_print_cmd_function",
+	"add_the_state_name_to_print_cmd_function",
+	"add_the_state_name_to_print_cmd_function",
+	"add_the_state_name_to_print_cmd_function",
+	"add_the_state_name_to_print_cmd_function"};
+	printf("Current mission: %s\n", list_of_states[state]);
 }
