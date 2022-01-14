@@ -35,6 +35,7 @@ double laserpar[10];
 void serverconnect(componentservertype *s);
 void xml_proc(struct xml_in *x);
 void xml_proca(struct xml_in *x);
+void print_cmd(int state);
 
 componentservertype lmssrv, camsrv;
 
@@ -476,7 +477,7 @@ int main(){
 			linetype = missions[j][4];
 			dist = missions[j][5];
 			angle = missions[j][6];
-			printf("Current mission: %d\n", mission.state);
+			print_cmd(mission.state); //Current mission: number
 			j+=1;
 			break;
 		case ms_fwd:
@@ -1231,4 +1232,24 @@ int gateFound(int index){
 
 	}
 	return 0; 
+}
+
+void print_cmd(int state)
+{
+	char list_of_states[15][50] = {"ms_init",
+	"ms_houston",
+	"ms_fwd",
+	"ms_drive",
+	"ms_turn",
+	"ms_end",
+	"ms_direction_control",
+	"ms_followline",
+	"ms_followline_ir",
+	"ms_hugwall",
+	"add_the_state_name_to_print_cmd_function",
+	"add_the_state_name_to_print_cmd_function",
+	"add_the_state_name_to_print_cmd_function",
+	"add_the_state_name_to_print_cmd_function",
+	"add_the_state_name_to_print_cmd_function"};
+	printf("Current mission: %s\n", list_of_states[state]);
 }
