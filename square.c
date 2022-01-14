@@ -464,21 +464,21 @@ int main(){
 			// MISSION ARRAY: ms, cond, condparam, speed, linetype, distance, angle
 			mission.state = ms_houston;
 			mission_lenght = 5;
-
 			j = 0;
 
 			// Obstacle 1
-			command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.12, br, 0, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 180*M_PI/180);
-			command(missions, ms_followline, drivendist, 0, 0.15, 0, 0.7, 0);
-			command(missions, ms_followline, crossingblack, 0, 0.15, bm, 0, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 180*M_PI/180);
+			//command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.12, br, 0, 0);
+			//command(missions, ms_turn, 0, 0, 0.2, 0, 0, 180*M_PI/180);
+			//command(missions, ms_followline, drivendist, 0, 0.15, 0, 0.7, 0);
+			//command(missions, ms_followline, crossingblack, 0, 0.15, bm, 0, 0);
+			//command(missions, ms_turn, 0, 0, 0.2, 0, 0, 180*M_PI/180);
 			
 			// Obstacle 2
 			
 			// Obstacle 3
 			
 			// Obstacle 4
+			/*
 			command(missions, ms_wallhug, irdistright_more, 0.8, 0.1, 0, 0.3, 0);
 			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.40, 0);
 			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
@@ -491,17 +491,16 @@ int main(){
 			command(missions, ms_followline, drivendist, 1, 0.2, bm, 0, 0);
 			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -180*M_PI/180);
 			command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
-
+			*/
 			// Obstacle 5
 			command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
 			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
 			command(missions, ms_followline, crossingblack, 0, 0.2, wm, 0, 0);
 			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
 			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
-
+			/*
 			/////////////////////    MISSIONS    ///////////////////// 
 			mission_lenght = 5;
-
 			// Obstacle 5:
 			// followline "bm" @v 0.2 : ($crossingblackline==1)
 			cmd_followline(missions, bm, 0.2, crossingblack, 0);
@@ -513,7 +512,7 @@ int main(){
 			cmd_fwd(missions, 0.2, 0.1);
 			// turnr 0.10 30
 			cmd_turnr(missions, 0.2, -90); //only degrees angle
-
+			*/
 			/////////////////    END OF MISSIONS    /////////////////
 
 			break;
@@ -1126,8 +1125,14 @@ void linesensor_normalizer(int linedata[8]){
 void linesensor_normalizer_2(int linedata[8], float line_intensity[8]){
 	for (int i = 0; i < 8; i ++){
 		line_intensity[i] = (float)(linedata[i] - BLACKLINE) / (float)(WHITELINE - BLACKLINE);
-
-	}
+		if (line_intensity[i]<0.3){
+			line_intensity[i]=0;
+		}else if (line_intensity[i]>0.7){
+			line_intensity[i]=1;
+		}else{
+			line_intensity[i]=0.5;
+		}
+	}		
 }
 
 int lowest_intensity(float linedata[8], char followleft){
@@ -1161,10 +1166,19 @@ float center_of_gravity(float linedata[8], char color){
 	int min_index_sum = 0;
 	int min_index_count = 0;
 	for (int i = 0; i < 8; i ++){
-		if (linedata[i] == color){ // 0 for black, 1 for light
-			min_index_sum += i;
-			min_index_count++;
+		if (color){
+			if (linedata[i] == 1){ // White
+				min_index_sum += i;
+				min_index_count++;
+			}
+		}else{
+			if (linedata[i] == 0){ // Black
+				min_index_sum += i;
+				min_index_count++;
+			}
+
 		}
+
 	}
 
 	// Avoid dividing by zero.
