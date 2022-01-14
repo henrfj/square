@@ -54,10 +54,20 @@ int main(){
 /////////////////    END OF MISSIONS    /////////////////
 //ADD TO LINE  1120
 int update_command_no(){
+	"""update what mission we are working on. If first mission (0),
+		then pass the zero first without ++1"""
     static int command_no = 0;
+
+	static int init_flag = 0;
+
+	if (command_no==0 && init_flag==0){
+		init_flag = 1;
+		printf("initialized and returned command_no: %d\n", command_no);
+		return command_no;
+	}
     command_no++;
+	printf("command_no: %d\n", command_no);
     return command_no;
-}
 
 void cmd_followline(double missions[100][7],int linetype, double speed, int condition,
  double condition_parameter){
