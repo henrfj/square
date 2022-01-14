@@ -1243,7 +1243,6 @@ int gateFound(int index){
 	}
 	return 0; 
 }
-<<<<<<< HEAD
 */
 int gateFound(int index){ 
 	printf("lida 0 data %f\n",laserpar[0]);
@@ -1254,7 +1253,6 @@ int gateFound(int index){
 	}
 	return 0; 
 }
-=======
 
 void print_cmd(int state)
 {
@@ -1275,4 +1273,3 @@ void print_cmd(int state)
 	"add_the_state_name_to_print_cmd_function"};
 	printf("Current mission: %s\n", list_of_states[state]);
 }
->>>>>>> b67ad774177f2ba6ba8f609e7b5c200dd79be53a
