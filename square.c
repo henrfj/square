@@ -113,7 +113,7 @@ typedef struct
 	double motorspeed_l, motorspeed_r;
 	int finished;
 	// internal variables
-	double startpos;
+	double startpos, startangle;
 	// Current speed of the system
 	double currentspeed;
 	// The type of line to follow
@@ -142,7 +142,8 @@ enum
 	mot_drive,
 	mot_turn,
 	mot_direction_control,
-	mot_line_follow
+	mot_line_follow,
+	mot_wallhug
 	
 };
 
@@ -170,15 +171,15 @@ int turn(double angle, double speed, int time);
 int dc(double dist, double speed, double angle, int time);
 int follow_line(int condition_type, double condition, char linetype, double speed, int time);
 int lida_dist(int index, double length);
+int hug_wall(int condition_type, double condition, double speed, double dist, int time);
 
-
-void linesensor_normalizer(int  linedata[8]);
+// void linesensor_normalizer(int  linedata[8]);
 void linesensor_normalizer_2(int linedata[8], float line_intensity[8]);
 void irsensor_transformer(int irdata[5], float irdistances[5]);
 
 float center_of_gravity(float linedata[8], char color);
 int lowest_intensity(float linedata[8], char followleft);
-int crossingblackline(int linedata[8] );
+int crossingblackline(float line_intensity[8]);
 int blackLineFound(int linedata[8], int amountOfBlack);
 int checkCondition(motiontype *p, odotype *o);
 int gateFound(int index); 
@@ -220,7 +221,7 @@ enum
 	ms_end,
 	ms_direction_control,
 	ms_followline,
-	ms_followline_ir
+	ms_wallhug
 };
 
 enum linetypes {
@@ -467,15 +468,32 @@ int main(){
 			mission_lenght = 4;
 			j = 0;
 
-			// Obstacle 1 works
-			/*
-			command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.12, br, 0, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 180*M_PI/180);
-			command(missions, ms_followline, drivendist, 0, 0.15, 0, 0.7, 0);
-			command(missions, ms_followline, crossingblack, 0, 0.15, bm, 0, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 180*M_PI/180);
-			*/
+			// Obstacle 1
+			// command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.12, br, 0, 0);
+			// command(missions, ms_turn, 0, 0, 0.2, 0, 0, 180*M_PI/180);
+			// command(missions, ms_followline, drivendist, 0, 0.15, 0, 0.7, 0);
+			// command(missions, ms_followline, crossingblack, 0, 0.15, bm, 0, 0);
+			// command(missions, ms_turn, 0, 0, 0.2, 0, 0, 180*M_PI/180);
+			
+			
 			// Obstacle 2
+			/*cmd_followline(missions, bl, 0.2, irdistfrontmiddle, 0.2);
+			cmd_drive(missions,crossingblack,0,0.1);
+			cmd_fwd(missions, 0.16, 0.1);
+			cmd_fwd(missions, -1, -0.1);
+			cmd_turnr(missions,0.1,-90);
+			*/
+			
+			// drive @v0.2 : ($blacklinefound==1)
+			// fwd 0.20
+			// turn -360 : ($crossingblackline==1)
+			// turn 90
+			// followline "bm" @v 0.22 : ($crossingblackline==1)
+			// fwd 0.25
+			// turn 90
+			// followline "bm" @v 0.22 : ($crossingblackline==1)
+			// fwd 0.225
+			// followline "bm" @v 0.22 : ($crossingblackline==1)		
 			
 
 			// Obstacle 3 dosnt work yet
@@ -499,6 +517,31 @@ int main(){
 			
 
 
+			/*
+			command(missions, ms_wallhug, irdistright_more, 0.8, 0.1, 0, 0.3, 0);
+			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.40, 0);
+			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
+			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.8, 0);
+			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
+			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
+			command(missions, ms_wallhug, irdistright_more, 0.8, 0.1, 0, 0.3, 0);
+			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.40, 0);
+			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
+			command(missions, ms_followline, drivendist, 1, 0.2, bm, 0, 0);
+			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -180*M_PI/180);
+			command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
+			*/
+			// Obstacle 5
+			/*command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
+			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
+			command(missions, ms_followline, crossingblack, 0, 0.2, wm, 0, 0);
+			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
+			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
+			*/
+			
+			/*
+			/////////////////////    MISSIONS    ///////////////////// 
+			mission_lenght = 5;
 			// Obstacle 5:
 			// followline "bm" @v 0.2 : ($crossingblackline==1)
 			//cmd_followline(missions, bm, 0.2, crossingblack, 0);
@@ -509,9 +552,10 @@ int main(){
 			// fwd 0.1 @v0.2
 			//cmd_fwd(missions, 0.2, 0.1);
 			// turnr 0.10 30
-			//cmd_turnr(missions, 0.2, -90); //only degrees angle
+			cmd_turnr(missions, 0.2, -90); //only degrees angle
+			*/
+			/////////////////    END OF MISSIONS    /////////////////<<<<<<< HEAD
 
-			/////////////////    END OF MISSIONS    /////////////////
 			break;
 
 		case ms_houston:
@@ -532,9 +576,6 @@ int main(){
 			dist = missions[j][5];
 			angle = missions[j][6];
 			print_cmd(mission.state); //Current mission: number
-			//if (j==0){
-			//	printf("boxdist= %f\n",(odo.y_pos+0.2+0.26));
-			//}
 			j+=1;
 			break;
 		case ms_fwd:
@@ -551,7 +592,11 @@ int main(){
 			if (follow_line(condition, condition_param, linetype, speed, mission.time))
 				mission.state = ms_houston;
 			break;
-
+		
+		case ms_wallhug:
+			if (hug_wall(condition, condition_param, speed, dist, mission.time))
+				mission.state = ms_houston;
+			break;
 
 		case ms_direction_control:
 			//printf("ms_direction_control!\n");
@@ -706,6 +751,11 @@ void update_motcon(motiontype *p, odotype *o){
 	double dV;
 	float irdistances[5];
 	float line_intensity[8];
+	char go_on;
+	float hug_gain;
+	float actual_dist;
+	// So the motor voltage is still operational IRL
+	double sm = 0.01;
 
 	if (p->cmd != 0)
 	{ // initialize the motor commands
@@ -741,8 +791,13 @@ void update_motcon(motiontype *p, odotype *o){
 			break;
 		
 		case mot_line_follow:
-				o->traveldist = 0;
-				p->curcmd = mot_line_follow;
+			o->traveldist = 0;
+			p->curcmd = mot_line_follow;
+			break;
+
+		case mot_wallhug:
+			p->startangle = o->theta;
+			p->curcmd = mot_wallhug;
 			break;
 		}
 		p->cmd = 0;
@@ -756,16 +811,25 @@ void update_motcon(motiontype *p, odotype *o){
 
 	case mot_move:
 		driven_dist = (p->right_pos + p->left_pos) / 2 - p->startpos; 
-		d = p->dist - driven_dist; 						// remaining distance
-		
+		printf("driven_dist: %f\n", driven_dist);
+		d = fabs(p->dist - driven_dist); 						// remaining distance
+		printf("d: %f\n", d);
+
 		// We need to deaccelerate
-		if ((deaccel_flag) || (p->currentspeed >= sqrt(2 * max_acceleration * d))){ 
+		if ((deaccel_flag) || (fabs(p->currentspeed) >= sqrt(2 * max_acceleration * d))){ 
 			if (!deaccel_flag){
 				deaccel_flag = 1;
 			}
 			
-			if (fabs(0 - p->currentspeed) > clock_acceleration){
+			// if (p->currentspeed > clock_acceleration){
+			// 	p->currentspeed -= clock_acceleration;
+
+			if (p->currentspeed > clock_acceleration){ // Accelerate
 				p->currentspeed -= clock_acceleration;
+			}
+			else if(p->currentspeed < -clock_acceleration){
+				p->currentspeed += clock_acceleration;
+			
 			}else{ // Completely stopped
 				p->currentspeed = 0;
 				p->finished = 1;
@@ -776,9 +840,13 @@ void update_motcon(motiontype *p, odotype *o){
 
 		}// Keep accelerating or moving forward
 		else{ 
-			if (fabs(p->speedcmd - p->currentspeed) > clock_acceleration){ // Accelerate
+			if ((p->speedcmd - p->currentspeed) > clock_acceleration){ // Accelerate
 				p->currentspeed += clock_acceleration;
-			}else{ // Max speed 
+			}
+			else if((p->speedcmd - p->currentspeed) < clock_acceleration){
+				p->currentspeed -= clock_acceleration;
+			}
+			else{ // Max speed 
 				p->currentspeed = p->speedcmd;
 			}
 			p->motorspeed_l = p->currentspeed;
@@ -789,7 +857,8 @@ void update_motcon(motiontype *p, odotype *o){
 
 	case mot_drive:
 		/* Moving forward, with acceleration, under certain conditions */
-		d = 0;
+		d = 20;
+		linesensor_normalizer_2(odo.linesensor, line_intensity);
 		
 		if(p->condition_type==drivendist){
 			driven_dist = (p->right_pos + p->left_pos) / 2 - p->startpos; 
@@ -800,7 +869,6 @@ void update_motcon(motiontype *p, odotype *o){
 			d = irdistances[2] - p->ir_dist; 
 
 		}else if(p->condition_type==irdistright_more){
-			d = 20; // Make sure it never reaches it.
 			irsensor_transformer(odo.irsensor, irdistances);
 			//printf("Ir-right: %f \tp->ir_dist %f \t Bool: %d\n", irdistances[4], p->ir_dist, (irdistances[4] > p->ir_dist));
 
@@ -816,8 +884,14 @@ void update_motcon(motiontype *p, odotype *o){
 			printf("deaccelerationflag: %d\n",deaccel_flag);
 
 
-		}
-		else{
+		
+		}else if(p->condition_type==crossingblack){
+			
+			if (crossingblackline(line_intensity)){
+				deaccel_flag=1;
+			}
+
+		}else{
 			printf("You have not set a proper condition. RIP!\n");
 			exit(-1);
 		}
@@ -913,7 +987,7 @@ void update_motcon(motiontype *p, odotype *o){
 		}
 
 		// 3 - Calulcate stop condition.
-		char go_on=0;
+		go_on=0;
 		if (p->condition_type==drivendist){
 			d = p->dist - o->traveldist; //distance left
 			go_on = (d>0);
@@ -924,7 +998,7 @@ void update_motcon(motiontype *p, odotype *o){
 			go_on = (p->ir_dist) < (irdistances[2]);
 		}else if(p->condition_type==crossingblack){
 			// Fill irdistances with meter data
-			go_on=!crossingblackline(odo.linesensor);
+			go_on=!crossingblackline(line_intensity);
 		}else if(p->condition_type==foundBlackLine){
 			// Fill irdistances with meter data
 			go_on=!blackLineFound(odo.linesensor,1);
@@ -932,15 +1006,22 @@ void update_motcon(motiontype *p, odotype *o){
 			go_on = !(gateFound(p->laser_index));
 		}
 
+		// So the motor voltage is still operational IRL
+		if (fabs(dV/2) < sm){
+			if (dV<0){
+				dV = -2 * sm;
+			}else{
+				dV = 2 * sm;
+			}	
+		}
+
+
 		// Go on or stop
 		if (!go_on){
 			deaccel_flag =1;
-
 		}
-
+		// Deacceleration
 		if ((deaccel_flag) ){ 
-			
-			
 			if (fabs(0 - p->currentspeed) > clock_acceleration){
 				p->currentspeed -= clock_acceleration;
 			}else{ // Completely stopped
@@ -948,8 +1029,8 @@ void update_motcon(motiontype *p, odotype *o){
 				p->finished = 1;
 				deaccel_flag = 0;
 			}
-			p->motorspeed_l = p->currentspeed  / 2;
-			p->motorspeed_r = p->currentspeed  / 2;
+			p->motorspeed_l = p->currentspeed;
+			p->motorspeed_r = p->currentspeed;
 
 		}// Keep accelerating or moving forward
 		else{ 
@@ -965,6 +1046,70 @@ void update_motcon(motiontype *p, odotype *o){
 		// TODO: what if there is no more line?
 		// -- follow LEFT/RIGHT will just go in a circle. as line_index will be 0 or 7.
 		// -- CG will go straight
+
+		break;
+
+	case mot_wallhug:
+		/* Hug a wall at a given distance */
+		// Calulcate stop condition.
+		go_on=0;
+		hug_gain=0.2;
+		actual_dist=0;
+
+		if (p->condition_type==irdistright_more){
+			irsensor_transformer(odo.irsensor, irdistances);
+			go_on = (p->ir_dist) > (irdistances[4]);
+
+			actual_dist = irdistances[4] * sin(M_PI/2 - (fabs(o->theta - p->startangle)));
+			dV = hug_gain * (p->dist - actual_dist);
+			//printf("Current angle: %f\t Startangle: %f \t Actual dist: %f \t theta3 %f \tdV: %f\n", o->theta, p->startangle, actual_dist, M_PI/2 - (o->theta - p->startangle), dV);
+
+
+		}else if(p->condition_type==irdistleft_more){
+			irsensor_transformer(odo.irsensor, irdistances);
+			go_on = (p->ir_dist) > (irdistances[0]);
+
+			actual_dist = irdistances[0] * sin(M_PI/2 - (fabs(o->theta - p->startangle)));
+			dV = hug_gain * (p->dist - actual_dist);
+
+		}
+
+		// So the motor voltage is still operational IRL
+		if (fabs(dV/2) < sm){
+			if (dV<0){
+				dV = -2 * sm;
+			}else{
+				dV = 2 * sm;
+			}	
+		}
+
+		// Go on or stop
+		if (!go_on){
+			deaccel_flag =1;
+		}
+
+		// Deacceleration
+		if ((deaccel_flag) ){ 
+			if (fabs(0 - p->currentspeed) > clock_acceleration){
+				p->currentspeed -= clock_acceleration;
+			}else{ // Completely stopped
+				p->currentspeed = 0;
+				p->finished = 1;
+				deaccel_flag = 0;
+			}
+			p->motorspeed_l = p->currentspeed;
+			p->motorspeed_r = p->currentspeed;
+
+		}// Keep hugging wall
+		else{ 
+			if (fabs(p->speedcmd - p->currentspeed) > clock_acceleration){ // Accelerate
+				p->currentspeed += clock_acceleration;
+			}else{ // Max speed 
+				p->currentspeed = p->speedcmd;
+			}
+			p->motorspeed_l = p->currentspeed - dV / 2;
+			p->motorspeed_r = p->currentspeed + dV / 2;
+		}
 
 		break;
 	
@@ -1000,7 +1145,6 @@ void update_motcon(motiontype *p, odotype *o){
 
 
 		// So the motor voltage is still operational
-		double sm = 0.01;
 		if (fabs(dV/2) < sm){
 			if (dV<0){
 				dV = -2 * sm;
@@ -1037,18 +1181,24 @@ void irsensor_transformer(int irdata[5], float irdistances[5]){
 	}
 }
 
-void linesensor_normalizer(int linedata[8]){
-	for (int i = 0; i < 8; i ++){
-		linedata[i] = (linedata[i] - BLACKLINE) / (WHITELINE - BLACKLINE);
-	}
+// void linesensor_normalizer(int linedata[8]){
+// 	for (int i = 0; i < 8; i ++){
+// 		linedata[i] = (linedata[i] - BLACKLINE) / (WHITELINE - BLACKLINE);
+// 	}
 
-}
+// }
 
-void linesensor_normalizer_2(int linedata[8], float line_intensity[8]){
-	for (int i = 0; i < 8; i ++){
-		line_intensity[i] = (float)(linedata[i] - BLACKLINE) / (float)(WHITELINE - BLACKLINE);
-
-	}
+void linesensor_normalizer_2(int linedata[8], float line_intensity[7]){
+    for (int i = 0; i < 8; i ++){
+        line_intensity[i] = (float)(linedata[i] - BLACKLINE) / (float)(WHITELINE - BLACKLINE);
+        if (line_intensity[i]<0.3){
+            line_intensity[i]=0;
+        }else if (line_intensity[i]>0.7){
+            line_intensity[i]=1;
+        }else{
+            line_intensity[i]=0.5;
+        }
+    }        
 }
 
 int lowest_intensity(float linedata[8], char followleft){
@@ -1082,10 +1232,19 @@ float center_of_gravity(float linedata[8], char color){
 	int min_index_sum = 0;
 	int min_index_count = 0;
 	for (int i = 0; i < 8; i ++){
-		if (linedata[i] == color){ // 0 for black, 1 for light
-			min_index_sum += i;
-			min_index_count++;
+		if (color){
+			if (linedata[i] == 1){ // White
+				min_index_sum += i;
+				min_index_count++;
+			}
+		}else{
+			if (linedata[i] == 0){ // Black
+				min_index_sum += i;
+				min_index_count++;
+			}
+
 		}
+
 	}
 
 	// Avoid dividing by zero.
@@ -1130,6 +1289,8 @@ int drive(int condition_type, double condition, double speed, int time){
 		}else if(condition_type==dist_lida){
 			mot.ir_dist = condition;
 			printf("condition: %f\n",condition);
+		}else if(condition_type==crossingblack){
+			mot.dist = 0;
 		}else{
 			printf("Wrong condition type inserted.\n");
 		}
@@ -1167,6 +1328,28 @@ int follow_line(int condition_type, double condition, char linetype, double spee
 		return mot.finished;
 	}
 }
+
+int hug_wall(int condition_type, double condition, double speed, double dist, int time){
+	if (time == 0){
+		mot.cmd = mot_wallhug;
+		mot.speedcmd = speed;
+		mot.dist = dist; // Will be used as dist from wall
+		mot.condition_type = condition_type;
+
+		if(condition_type==irdistleft_more){
+			mot.ir_dist = condition;
+		}else if(condition_type == irdistright_more){
+			mot.ir_dist = condition;
+		}else{
+			printf("Wrong condition type inserted.\n");
+		}
+		return 0;
+
+	}else{
+		return mot.finished;
+	}
+}
+
 
 int fwd(double dist, double speed, int time)
 {
@@ -1288,14 +1471,14 @@ void sm_update(smtype *p)
 
 
 
-int crossingblackline(int linedata[8] ){
+int crossingblackline(float line_intensity[7]){
 	for (int i=1;i<7;i++){
-		if (linedata[i]!=0){
+		if (line_intensity[i]!=0){
 			return 0;
 		}
 	}
-	if (linedata[0]==0|| linedata[7]==0){
-			return 1;
+	if (line_intensity[0]==0 || line_intensity[7]==0){
+		return 1;
 	}
 	return 0; //returns 1 if blackcrossing is detected else return 0
 }  
