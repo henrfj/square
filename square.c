@@ -158,7 +158,8 @@ enum conditions{
 	crossingblack,
 	foundBlackLine,
 	foundGate,
-	middleOfGate
+	middleOfGate,
+	dist_lida
 };
 
 void update_motcon(motiontype *p, odotype *o);
@@ -168,6 +169,7 @@ int drive(int condition_type, double condition, double speed, int time);
 int turn(double angle, double speed, int time);
 int dc(double dist, double speed, double angle, int time);
 int follow_line(int condition_type, double condition, char linetype, double speed, int time);
+int lida_dist(int index, double length);
 
 
 void linesensor_normalizer(int  linedata[8]);
@@ -462,22 +464,31 @@ int main(){
 
 			// MISSION ARRAY: ms, cond, condparam, speed, linetype, distance, angle
 			mission.state = ms_houston;
+			mission_lenght = 4;
 			j = 0;
 
-<<<<<<< HEAD
-			// Obstacle 1
+			// Obstacle 1 works
+			/*
 			command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.12, br, 0, 0);
 			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 180*M_PI/180);
 			command(missions, ms_followline, drivendist, 0, 0.15, 0, 0.7, 0);
 			command(missions, ms_followline, crossingblack, 0, 0.15, bm, 0, 0);
 			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 180*M_PI/180);
-			
+			*/
 			// Obstacle 2
 			
-			// Obstacle 3
+
+			// Obstacle 3 dosnt work yet
+			
+			command(missions, ms_followline, foundGate, 0, 0.1, bm, 0, 0);
+			command(missions, ms_fwd, drivendist, 0.3, 0.15, 0, 0.3, 0);
+			command(missions, ms_followline, foundGate, 0, 0.1, bm, 0, 0);
+			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 90*M_PI/180);
+			//command(missions, ms_drive,dist_lida, 0.35, 0.1, 0, 0, 0); dosnt work yet (desired distance always 0)
 			
 			// Obstacle 4
 			
+
 			// Obstacle 5
 			//command(missions, ms_followline, foundGate, 0, 0.2, bm, 0, 0);
 			//command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
@@ -485,32 +496,22 @@ int main(){
 			//command(missions, ms_followline, crossingblack, 0, 0.2, wm, 0, 0);
 			//command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
 			//command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
-=======
-			/////////////////////    MISSIONS    ///////////////////// 
-			mission_lenght = 5;
+			
 
-			// Obstacle 5
-			//command(missions, ms_followline, foundGate, 0, 0.2, bm, 0, 0);
-			// command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
-			// command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
-			// command(missions, ms_followline, crossingblack, 0, 0.2, wm, 0, 0);
-			// command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
-			// command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
 
 			// Obstacle 5:
 			// followline "bm" @v 0.2 : ($crossingblackline==1)
-			cmd_followline(missions, bm, 0.2, crossingblack, 0);
+			//cmd_followline(missions, bm, 0.2, crossingblack, 0);
 			// fwd 0.1 @v0.2
-			cmd_fwd(missions, 0.2, 0.1);
+			//cmd_fwd(missions, 0.2, 0.1);
 			// followline "wm" @v 0.2 : ($crossingblackline==1)
-			cmd_followline(missions, wm, 0.2, crossingblack, 0);
+			//cmd_followline(missions, wm, 0.2, crossingblack, 0);
 			// fwd 0.1 @v0.2
-			cmd_fwd(missions, 0.2, 0.1);
+			//cmd_fwd(missions, 0.2, 0.1);
 			// turnr 0.10 30
-			cmd_turnr(missions, 0.2, -90); //only degrees angle
+			//cmd_turnr(missions, 0.2, -90); //only degrees angle
 
 			/////////////////    END OF MISSIONS    /////////////////
->>>>>>> aaf50b56a2987be82ffe089d3ba9128a257e7356
 			break;
 
 		case ms_houston:
@@ -806,8 +807,17 @@ void update_motcon(motiontype *p, odotype *o){
 			if (irdistances[4] > p->ir_dist){
 				deaccel_flag=1;
 			}
+		
 
-		}else{
+		}else if(p->condition_type == dist_lida){
+			d = 20; 
+			printf("laser dist: %f decired dist: %f\n",laserpar[4],p->ir_dist);
+			deaccel_flag=(lida_dist(4,p->ir_dist));
+			printf("deaccelerationflag: %d\n",deaccel_flag);
+
+
+		}
+		else{
 			printf("You have not set a proper condition. RIP!\n");
 			exit(-1);
 		}
@@ -1105,6 +1115,7 @@ int drive(int condition_type, double condition, double speed, int time){
 		mot.cmd = mot_drive;
 		mot.speedcmd = speed;
 		mot.dist = 0;
+		mot.ir_dist=0;
 		mot.condition_type = condition_type;
 
 		// TODO: implement more conditions
@@ -1116,8 +1127,10 @@ int drive(int condition_type, double condition, double speed, int time){
 
 		}else if(condition_type==irdistright_more){
 			mot.ir_dist = condition;
-		}
-		else{
+		}else if(condition_type==dist_lida){
+			mot.ir_dist = condition;
+			printf("condition: %f\n",condition);
+		}else{
 			printf("Wrong condition type inserted.\n");
 		}
 		return 0;
@@ -1143,7 +1156,7 @@ int follow_line(int condition_type, double condition, char linetype, double spee
 			mot.ir_dist = condition;
 		}else if(condition_type == foundGate){
 			mot.laser_index = condition; 
-		}else if(!(condition_type==crossingblack) && !(condition_type == foundBlackLine)){
+		}else if(!(condition_type == dist_lida) && !(condition_type==crossingblack) && !(condition_type == foundBlackLine)){
 			printf("Wrong condition type inserted.\n");
 		}
 		
@@ -1350,14 +1363,31 @@ int gateFound(int index){
 }
 */
 int gateFound(int index){ 
-	printf("lida 0 data %f\n",laserpar[0]);
-	if(0.6 > laserpar[index] && laserpar[index]> 0){
+	//printf("lida 0 data %f\n",laserpar[0]);
+	static double firstobj=0;
+	//static double lenght=-1;
+
+	if((firstobj != 0) && laserpar[index] > (firstobj +0.04)){
+		printf("clear first pole %f\n",laserpar[0]);
+		firstobj =0;
+		return 1;
+	}else if(0.6 > laserpar[index] && laserpar[index]> 0){
+		firstobj = laserpar[index];
 	
-		printf("found gate \n");
-		return 1; 
-	}
+		//printf("lida 0 data %f\n",laserpar[0]);
+	} 
 	return 0; 
 }
+int lida_dist(int index, double length){
+	if(laserpar[index]<= length){
+		printf("reached %f\n",laserpar[index]);
+		return 1;
+	}
+	printf("not reached %f\n",laserpar[index]);
+	return 0;
+
+}
+
 
 void print_cmd(int state)
 {
