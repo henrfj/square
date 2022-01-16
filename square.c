@@ -159,7 +159,9 @@ enum conditions{
 	crossingblack,
 	foundBlackLine,
 	foundGate,
-	middleOfGate
+	middleOfGate,
+	l, 			//hugwall left, right
+	r
 };
 
 void update_motcon(motiontype *p, odotype *o);
@@ -190,6 +192,7 @@ void cmd_drive(double missions[100][7], int condition,
     double condition_parameter, double speed);
 void cmd_fwd(double missions[100][7], double distance, double speed);
 void cmd_turnr(double missions[100][7], double speed, double angle);
+void cmd_followwall(double missions[100][7], int condition, double distance, double speed);
 
 
 typedef struct
@@ -468,53 +471,61 @@ int main(){
 			j = 0;
 
 			// Obstacle 1
-			command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.12, br, 0, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 180*M_PI/180);
-			command(missions, ms_followline, drivendist, 0, 0.15, 0, 0.7, 0);
-			command(missions, ms_followline, crossingblack, 0, 0.15, bm, 0, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 180*M_PI/180);
+			// command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.12, br, 0, 0);
+			// command(missions, ms_turn, 0, 0, 0.2, 0, 0, 180*M_PI/180);
+			// command(missions, ms_followline, drivendist, 0, 0.15, 0, 0.7, 0);
+			// command(missions, ms_followline, crossingblack, 0, 0.15, bm, 0, 0);
+			// command(missions, ms_turn, 0, 0, 0.2, 0, 0, 180*M_PI/180);
 			
-			// Obstacle 2
+			// // Obstacle 2
 			
-			// Obstacle 3
+			// // Obstacle 3
 			
-			// Obstacle 4
-			command(missions, ms_wallhug, irdistright_more, 0.8, 0.1, 0, 0.3, 0);
-			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.40, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
-			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.8, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
-			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
-			command(missions, ms_wallhug, irdistright_more, 0.8, 0.1, 0, 0.3, 0);
-			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.40, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
-			command(missions, ms_followline, drivendist, 1, 0.2, bm, 0, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -180*M_PI/180);
-			command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
+			// // Obstacle 4
+			// command(missions, ms_wallhug, irdistright_more, 0.8, 0.1, 0, 0.3, 0);
+			// command(missions, ms_fwd, 0, 0, 0.1, 0, 0.40, 0);
+			// command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
+			// command(missions, ms_fwd, 0, 0, 0.1, 0, 0.8, 0);
+			// command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
+			// command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
+			// command(missions, ms_wallhug, irdistright_more, 0.8, 0.1, 0, 0.3, 0);
+			// command(missions, ms_fwd, 0, 0, 0.1, 0, 0.40, 0);
+			// command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
+			// command(missions, ms_followline, drivendist, 1, 0.2, bm, 0, 0);
+			// command(missions, ms_turn, 0, 0, 0.2, 0, 0, -180*M_PI/180);
+			// command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
 
-			// Obstacle 5
-			command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
-			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
-			command(missions, ms_followline, crossingblack, 0, 0.2, wm, 0, 0);
-			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
+			// // Obstacle 5
+			// command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
+			// command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
+			// command(missions, ms_followline, crossingblack, 0, 0.2, wm, 0, 0);
+			// command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
+			// command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
 
 			/////////////////////    MISSIONS    ///////////////////// 
-			mission_lenght = 5;
+			mission_lenght = 4;
 
 			// Obstacle 5:
-			// followline "bm" @v 0.2 : ($crossingblackline==1)
-			cmd_followline(missions, bm, 0.2, crossingblack, 0);
-			// fwd 0.1 @v0.2
-			cmd_fwd(missions, 0.2, 0.1);
-			// followline "wm" @v 0.2 : ($crossingblackline==1)
-			cmd_followline(missions, wm, 0.2, crossingblack, 0);
-			// fwd 0.1 @v0.2
-			cmd_fwd(missions, 0.2, 0.1);
-			// turnr 0.10 30
-			cmd_turnr(missions, 0.2, -90); //only degrees angle
+			// // followline "bm" @v 0.2 : ($crossingblackline==1)
+			// cmd_followline(missions, bm, 0.2, crossingblack, 0);
+			// // fwd 0.1 @v0.2
+			// cmd_fwd(missions, 0.2, 0.1);s
+			// // followline "wm" @v 0.2 : ($crossingblackline==1)
+			// cmd_followline(missions, wm, 0.2, crossingblack, 0);
+			// // fwd 0.1 @v0.2
+			// cmd_fwd(missions, 0.2, 0.1);
+			// // turnr 0.10 30
+			// cmd_turnr(missions, 0.2, -90); //only degrees angle
 
-			/////////////////    END OF MISSIONS    /////////////////
+
+			//Obstacle 6:
+			// followline "bm" @v 0.1 : ($irdistfrontmiddle<0.2)
+			cmd_followline(missions, bm, 0.1, irdistfrontmiddle, 0.2);
+			cmd_turnr(missions, 0.2, -90);
+			command(missions, ms_wallhug, irdistleft_more, 0.8, 0.1, 0, 0.3, 0);
+			cmd_turnr(missions, 0.2, 90);
+
+			//cmd_followwall(missions, l, 0.3, 0.2);
 
 			break;
 
@@ -1351,6 +1362,26 @@ void cmd_turnr(double missions[100][7], double speed, double angle){
 		missions[command_no][4] = 0;
 		missions[command_no][5] = 0;
 		missions[command_no][6] = angle*M_PI/180;
+}
+
+void cmd_followwall(double missions[100][7], int condition, double distance, double speed){
+		if (condition==l){
+			condition = irdistleft_more;
+		}
+		else if (condition == r){
+			condition = irdistright_more;
+		}
+
+		int command_no = update_command_no();
+			
+		missions[command_no][0] = ms_wallhug;
+		missions[command_no][1] = condition;
+		missions[command_no][2] = 0.8;
+		missions[command_no][3] = speed,
+		missions[command_no][4] = 0;
+		missions[command_no][5] = distance;
+		missions[command_no][6] = 0;
+ 
 }
 
 void command(double missions[100][7], int mission, int condition,
