@@ -468,11 +468,7 @@ int main(){
 
 			// MISSION ARRAY: ms, cond, condparam, speed, linetype, distance, angle
 			mission.state = ms_houston;
-<<<<<<< HEAD
-			mission_lenght = 5;
-=======
-			mission_lenght = 20;
->>>>>>> 2071708ce7d11e9cdb01915a254b66d378131287
+			mission_lenght = 15;
 			j = 0;
 
 			// Obstacle 1
@@ -835,13 +831,7 @@ void update_motcon(motiontype *p, odotype *o){
 
 	case mot_move:
 		driven_dist = (p->right_pos + p->left_pos) / 2 - p->startpos; 
-<<<<<<< HEAD
-		//printf("driven_dist: %f\n", driven_dist);
 		d = fabs(p->dist - driven_dist); 						// remaining distance
-		//printf("d: %f\n", d);
-=======
-		d = fabs(p->dist - driven_dist); 						// remaining distance
->>>>>>> 2071708ce7d11e9cdb01915a254b66d378131287
 
 		// We need to deaccelerate
 		if ((deaccel_flag) || (fabs(p->currentspeed) >= sqrt(2 * max_acceleration * d))){ 
