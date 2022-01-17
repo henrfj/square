@@ -161,7 +161,7 @@ enum conditions{
 	foundGate,
 	middleOfGate,
 	l, 			//hugwall left, right
-	r
+	r,
 	dist_lida
 };
 
@@ -195,7 +195,7 @@ void cmd_drive(double missions[100][7], int condition,
 void cmd_fwd(double missions[100][7], double distance, double speed);
 void cmd_turnr(double missions[100][7], double speed, double angle);
 void cmd_followwall(double missions[100][7], int condition, double distance, double speed);
-
+int lida_dist(int index, double length);
 
 typedef struct
 {
@@ -468,7 +468,7 @@ int main(){
 
 			// MISSION ARRAY: ms, cond, condparam, speed, linetype, distance, angle
 			mission.state = ms_houston;
-			mission_lenght = 4;
+			mission_lenght = 5;
 			j = 0;
 
 			// Obstacle 1
@@ -499,14 +499,15 @@ int main(){
 			// followline "bm" @v 0.22 : ($crossingblackline==1)		
 			
 
-			// Obstacle 3 dosnt work yet
-			
-			command(missions, ms_followline, foundGate, 0, 0.1, bm, 0, 0);
-			command(missions, ms_fwd, drivendist, 0.3, 0.15, 0, 0.3, 0);
-			command(missions, ms_followline, foundGate, 0, 0.1, bm, 0, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 90*M_PI/180);
-			//command(missions, ms_drive,dist_lida, 0.35, 0.1, 0, 0, 0); dosnt work yet (desired distance always 0)
-			
+			// Obstacle 3 works
+
+			/*cmd_followline(missions,bm,0.1,foundGate,0);
+			cmd_drive(missions,drivendist,0.2,0.1);
+			cmd_followline(missions,bm,0.1,foundGate,0);
+			cmd_turnr(missions,0.1,90);
+			cmd_drive(missions,dist_lida,0.3,0.1);
+			*/
+
 			// Obstacle 4
 			
 
@@ -560,10 +561,10 @@ int main(){
 
 			//Obstacle 6:
 			// followline "bm" @v 0.1 : ($irdistfrontmiddle<0.2)
-			cmd_followline(missions, bm, 0.1, irdistfrontmiddle, 0.2);
-			cmd_turnr(missions, 0.2, -90);
-			command(missions, ms_wallhug, irdistleft_more, 0.8, 0.1, 0, 0.3, 0);
-			cmd_turnr(missions, 0.2, 90);
+			//cmd_followline(missions, bm, 0.1, irdistfrontmiddle, 0.2);
+			//cmd_turnr(missions, 0.2, -90);
+			//command(missions, ms_wallhug, irdistleft_more, 0.8, 0.1, 0, 0.3, 0);
+			//cmd_turnr(missions, 0.2, 90);
 			/////////////////    END OF MISSIONS    /////////////////<<<<<<< HEAD
 
 			break;
@@ -580,7 +581,7 @@ int main(){
 			}
 			mission.state = missions[j][0]; 
 			condition = missions[j][1];
-			condition_param = missions[0][2];
+			condition_param = missions[j][2];
 			speed = missions[j][3];
 			linetype = missions[j][4];
 			dist = missions[j][5];
@@ -821,9 +822,9 @@ void update_motcon(motiontype *p, odotype *o){
 
 	case mot_move:
 		driven_dist = (p->right_pos + p->left_pos) / 2 - p->startpos; 
-		printf("driven_dist: %f\n", driven_dist);
+		//printf("driven_dist: %f\n", driven_dist);
 		d = fabs(p->dist - driven_dist); 						// remaining distance
-		printf("d: %f\n", d);
+		//printf("d: %f\n", d);
 
 		// We need to deaccelerate
 		if ((deaccel_flag) || (fabs(p->currentspeed) >= sqrt(2 * max_acceleration * d))){ 
@@ -881,7 +882,6 @@ void update_motcon(motiontype *p, odotype *o){
 		}else if(p->condition_type==irdistright_more){
 			irsensor_transformer(odo.irsensor, irdistances);
 			//printf("Ir-right: %f \tp->ir_dist %f \t Bool: %d\n", irdistances[4], p->ir_dist, (irdistances[4] > p->ir_dist));
-
 			if (irdistances[4] > p->ir_dist){
 				deaccel_flag=1;
 			}
@@ -889,9 +889,9 @@ void update_motcon(motiontype *p, odotype *o){
 
 		}else if(p->condition_type == dist_lida){
 			d = 20; 
-			printf("laser dist: %f decired dist: %f\n",laserpar[4],p->ir_dist);
+			//printf("laser dist: %f decired dist: %f\n",laserpar[4],p->ir_dist);
 			deaccel_flag=(lida_dist(4,p->ir_dist));
-			printf("deaccelerationflag: %d\n",deaccel_flag);
+			//printf("deaccelerationflag: %d\n",deaccel_flag);
 
 
 		
@@ -1298,7 +1298,7 @@ int drive(int condition_type, double condition, double speed, int time){
 			mot.ir_dist = condition;
 		}else if(condition_type==dist_lida){
 			mot.ir_dist = condition;
-			printf("condition: %f\n",condition);
+			//printf("condition: %f\n",condition);
 		}else if(condition_type==crossingblack){
 			mot.dist = 0;
 		}else{
@@ -1467,7 +1467,6 @@ void cmd_followwall(double missions[100][7], int condition, double distance, dou
 		missions[command_no][6] = 0;
  
 }
-
 void command(double missions[100][7], int mission, int condition,
  double condition_parameter, double speed, int linetype, double distance, double angle){
 		
@@ -1581,7 +1580,7 @@ int gateFound(int index){
 	//static double lenght=-1;
 
 	if((firstobj != 0) && laserpar[index] > (firstobj +0.04)){
-		printf("clear first pole %f\n",laserpar[0]);
+		//printf("clear first pole %f\n",laserpar[0]);
 		firstobj =0;
 		return 1;
 	}else if(0.6 > laserpar[index] && laserpar[index]> 0){
@@ -1593,10 +1592,10 @@ int gateFound(int index){
 }
 int lida_dist(int index, double length){
 	if(laserpar[index]<= length){
-		printf("reached %f\n",laserpar[index]);
+		//printf("reached %f\n",laserpar[index]);
 		return 1;
 	}
-	printf("not reached %f\n",laserpar[index]);
+	//printf("not reached %f\n",laserpar[index]);
 	return 0;
 
 }
