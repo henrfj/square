@@ -161,7 +161,7 @@ enum conditions{
 	foundGate,
 	middleOfGate,
 	l, 			//hugwall left, right
-	r
+	r,
 	dist_lida
 };
 
@@ -468,11 +468,11 @@ int main(){
 
 			// MISSION ARRAY: ms, cond, condparam, speed, linetype, distance, angle
 			mission.state = ms_houston;
-			mission_lenght = 4;
+			mission_lenght = 25;
 			j = 0;
 
 			// Obstacle 1
-			// command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.12, br, 0, 0);
+			//command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.12, br, 0, 0);
 			// command(missions, ms_turn, 0, 0, 0.2, 0, 0, 180*M_PI/180);
 			// command(missions, ms_followline, drivendist, 0, 0.15, 0, 0.7, 0);
 			// command(missions, ms_followline, crossingblack, 0, 0.15, bm, 0, 0);
@@ -486,40 +486,17 @@ int main(){
 			cmd_fwd(missions, -1, -0.1);
 			cmd_turnr(missions,0.1,-90);
 			*/
-			
-			// drive @v0.2 : ($blacklinefound==1)
-			// fwd 0.20
-			// turn -360 : ($crossingblackline==1)
-			// turn 90
-			// followline "bm" @v 0.22 : ($crossingblackline==1)
-			// fwd 0.25
-			// turn 90
-			// followline "bm" @v 0.22 : ($crossingblackline==1)
-			// fwd 0.225
-			// followline "bm" @v 0.22 : ($crossingblackline==1)		
-			
+					
 
 			// Obstacle 3 dosnt work yet
 			
-			command(missions, ms_followline, foundGate, 0, 0.1, bm, 0, 0);
-			command(missions, ms_fwd, drivendist, 0.3, 0.15, 0, 0.3, 0);
-			command(missions, ms_followline, foundGate, 0, 0.1, bm, 0, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 90*M_PI/180);
+			//command(missions, ms_followline, foundGate, 0, 0.1, bm, 0, 0);
+			//command(missions, ms_fwd, drivendist, 0.3, 0.15, 0, 0.3, 0);
+			//command(missions, ms_followline, foundGate, 0, 0.1, bm, 0, 0);
+			//command(missions, ms_turn, 0, 0, 0.2, 0, 0, 90*M_PI/180);
 			//command(missions, ms_drive,dist_lida, 0.35, 0.1, 0, 0, 0); dosnt work yet (desired distance always 0)
 			
 			// Obstacle 4
-			
-
-			// Obstacle 5
-			//command(missions, ms_followline, foundGate, 0, 0.2, bm, 0, 0);
-			//command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
-			//command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
-			//command(missions, ms_followline, crossingblack, 0, 0.2, wm, 0, 0);
-			//command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
-			//command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
-			
-
-
 			/*
 			command(missions, ms_wallhug, irdistright_more, 0.8, 0.1, 0, 0.3, 0);
 			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.40, 0);
@@ -534,15 +511,53 @@ int main(){
 			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -180*M_PI/180);
 			command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
 			*/
+
 			// Obstacle 5
-			/*command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
+			/*
 			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
 			command(missions, ms_followline, crossingblack, 0, 0.2, wm, 0, 0);
 			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
 			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
 			*/
 			
-			/*
+			// Obstacle 6
+			// Find the garage
+			command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.2, bm, 0, 0);
+			// Follow the east wall
+			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
+			command(missions, ms_drive, irdistleft_more, 0.8, 0.1, 0, 0, 0);
+			// Clear the corner
+			command(missions, ms_drive, drivendist, 0.5, 0.1, 0, 0, 0);
+			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 90*M_PI/180);
+			command(missions, ms_drive, drivendist, 0.25, 0.1, 0, 0, 0);
+			// Follow the north wall
+			command(missions, ms_wallhug, irdistleft_more, 0.8, 0.1, 0, 0.2, 0);
+			// Clear the corner
+			command(missions, ms_drive, drivendist, 0.5, 0.1, 0, 0, 0);
+			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 90*M_PI/180);
+			command(missions, ms_drive, drivendist, 0.25, 0.1, 0, 0, 0);
+			// Follow the west wall
+			command(missions, ms_wallhug, irdistleft_more, 0.8, 0.1, 0, 0.2, 0);
+			// Clear the corner
+			command(missions, ms_drive, drivendist, 0.4, 0.1, 0, 0, 0);
+			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 90*M_PI/180);
+			// Follow the south wall, get to the gate
+			command(missions, ms_drive, irdistfrontleft, 0.2, 0.1, 0, 0, 0);
+			command(missions, ms_drive, drivendist, 0.2, 0.1, 0, 0, 0);
+			// Open the gate
+			command(missions, ms_drive, drivendist, 0.2, 0.1, 0, 0, 0);
+			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 15*M_PI/180);
+			command(missions, ms_drive, drivendist, 0.2, 0.1, 0, 0, 0);
+			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 20*M_PI/180);
+			command(missions, ms_drive, drivendist, 0.2, 0.1, 0, 0, 0);
+			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 20*M_PI/180);
+			command(missions, ms_drive, drivendist, 0.30, 0.1, 0, 0, 0);
+			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 105*M_PI/180);
+			// Enter the garage
+			command(missions, ms_followline, drivendist, 0.35, 0.2, bm, 0, 0);
+			command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.2, bm, 0, 0);
+
+			/*	
 			/////////////////////    MISSIONS    ///////////////////// 
 			mission_lenght = 5;
 			// Obstacle 5:
@@ -560,10 +575,10 @@ int main(){
 
 			//Obstacle 6:
 			// followline "bm" @v 0.1 : ($irdistfrontmiddle<0.2)
-			cmd_followline(missions, bm, 0.1, irdistfrontmiddle, 0.2);
-			cmd_turnr(missions, 0.2, -90);
-			command(missions, ms_wallhug, irdistleft_more, 0.8, 0.1, 0, 0.3, 0);
-			cmd_turnr(missions, 0.2, 90);
+			//cmd_followline(missions, bm, 0.1, irdistfrontmiddle, 0.2);
+			//cmd_turnr(missions, 0.2, -90);
+			//command(missions, ms_wallhug, irdistleft_more, 0.8, 0.1, 0, 0.3, 0);
+			//cmd_turnr(missions, 0.2, 90);
 			/////////////////    END OF MISSIONS    /////////////////<<<<<<< HEAD
 
 			break;
@@ -580,7 +595,7 @@ int main(){
 			}
 			mission.state = missions[j][0]; 
 			condition = missions[j][1];
-			condition_param = missions[0][2];
+			condition_param = missions[j][2];
 			speed = missions[j][3];
 			linetype = missions[j][4];
 			dist = missions[j][5];
@@ -767,6 +782,7 @@ void update_motcon(motiontype *p, odotype *o){
 	// So the motor voltage is still operational IRL
 	double sm = 0.01;
 
+
 	if (p->cmd != 0)
 	{ // initialize the motor commands
 		p->finished = 0;
@@ -821,9 +837,9 @@ void update_motcon(motiontype *p, odotype *o){
 
 	case mot_move:
 		driven_dist = (p->right_pos + p->left_pos) / 2 - p->startpos; 
-		printf("driven_dist: %f\n", driven_dist);
+		//printf("driven_dist: %f\n", driven_dist);
 		d = fabs(p->dist - driven_dist); 						// remaining distance
-		printf("d: %f\n", d);
+		//printf("d: %f\n", d);
 
 		// We need to deaccelerate
 		if ((deaccel_flag) || (fabs(p->currentspeed) >= sqrt(2 * max_acceleration * d))){ 
@@ -876,7 +892,11 @@ void update_motcon(motiontype *p, odotype *o){
 
 		}else if(p->condition_type==irdistfrontmiddle){
 			irsensor_transformer(odo.irsensor, irdistances);
-			d = irdistances[2] - p->ir_dist; 
+			d = irdistances[2] - p->ir_dist;
+
+		}else if(p->condition_type==irdistfrontleft){
+			irsensor_transformer(odo.irsensor, irdistances);
+			d = irdistances[1] - p->ir_dist; 
 
 		}else if(p->condition_type==irdistright_more){
 			irsensor_transformer(odo.irsensor, irdistances);
@@ -885,7 +905,14 @@ void update_motcon(motiontype *p, odotype *o){
 			if (irdistances[4] > p->ir_dist){
 				deaccel_flag=1;
 			}
-		
+
+		}else if(p->condition_type==irdistleft_more){
+			irsensor_transformer(odo.irsensor, irdistances);
+			//printf("Ir-right: %f \tp->ir_dist %f \t Bool: %d\n", irdistances[4], p->ir_dist, (irdistances[4] > p->ir_dist));
+
+			if (irdistances[0] > p->ir_dist){
+				deaccel_flag=1;
+			}
 
 		}else if(p->condition_type == dist_lida){
 			d = 20; 
@@ -893,8 +920,6 @@ void update_motcon(motiontype *p, odotype *o){
 			deaccel_flag=(lida_dist(4,p->ir_dist));
 			printf("deaccelerationflag: %d\n",deaccel_flag);
 
-
-		
 		}else if(p->condition_type==crossingblack){
 			
 			if (crossingblackline(line_intensity)){
@@ -1080,7 +1105,9 @@ void update_motcon(motiontype *p, odotype *o){
 			go_on = (p->ir_dist) > (irdistances[0]);
 
 			actual_dist = irdistances[0] * sin(M_PI/2 - (fabs(o->theta - p->startangle)));
-			dV = hug_gain * (p->dist - actual_dist);
+			dV = -hug_gain * (p->dist - actual_dist);
+			//printf("Desired dist %f\t Measured left: %f \t Actual dist: %f \t dV: %f\n", p->dist, irdistances[0], actual_dist, dV);
+
 
 		}
 
@@ -1293,8 +1320,11 @@ int drive(int condition_type, double condition, double speed, int time){
 		}
 		else if(condition_type==irdistfrontmiddle){
 			mot.ir_dist = condition;
-
+		}else if(condition_type==irdistfrontleft){
+			mot.ir_dist = condition;
 		}else if(condition_type==irdistright_more){
+			mot.ir_dist = condition;
+		}else if(condition_type==irdistleft_more){
 			mot.ir_dist = condition;
 		}else if(condition_type==dist_lida){
 			mot.ir_dist = condition;
@@ -1471,8 +1501,9 @@ void cmd_followwall(double missions[100][7], int condition, double distance, dou
 void command(double missions[100][7], int mission, int condition,
  double condition_parameter, double speed, int linetype, double distance, double angle){
 		
-		static int command_no = 0;
-			
+		//static int command_no = 0;
+		int command_no = update_command_no();
+
 		missions[command_no][0] = mission;
 		missions[command_no][1] = condition;
 		missions[command_no][2] = condition_parameter;
@@ -1481,7 +1512,7 @@ void command(double missions[100][7], int mission, int condition,
 		missions[command_no][5] = distance;
 		missions[command_no][6] = angle;
 
-		command_no += 1;
+		//command_no += 1;
  
 }
 
@@ -1592,7 +1623,7 @@ int gateFound(int index){
 	return 0; 
 }
 int lida_dist(int index, double length){
-	if(laserpar[index]<= length){
+	if(laserpar[index] <= length){
 		printf("reached %f\n",laserpar[index]);
 		return 1;
 	}
@@ -1612,8 +1643,8 @@ void print_cmd(int state)
 	"ms_end",
 	"ms_direction_control",
 	"ms_followline",
-	"ms_followline_ir",
 	"ms_hugwall",
+	"add_the_state_name_to_print_cmd_function",
 	"add_the_state_name_to_print_cmd_function",
 	"add_the_state_name_to_print_cmd_function",
 	"add_the_state_name_to_print_cmd_function",
