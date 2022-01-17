@@ -48,6 +48,7 @@
 *.su
 *.idb
 *.pdb
+data.debug
 
 # Kernel Module Compile Results
 *.mod*
@@ -57,5 +58,5 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
-#data
+data
 *.dat
