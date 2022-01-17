@@ -571,7 +571,7 @@ int main(){
 
 		case ms_houston:
 			if (j==1){
-				printf("boxdist= %f\n",(fabs(odo.y_pos)+0.15+0.25));
+				printf("boxdist= %f\n",(fabs(odo.y_pos)+0.2+0.26));
 				
 			}
 			if(j==mission_lenght){
