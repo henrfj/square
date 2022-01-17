@@ -468,7 +468,11 @@ int main(){
 
 			// MISSION ARRAY: ms, cond, condparam, speed, linetype, distance, angle
 			mission.state = ms_houston;
+<<<<<<< HEAD
 			mission_lenght = 5;
+=======
+			mission_lenght = 20;
+>>>>>>> 2071708ce7d11e9cdb01915a254b66d378131287
 			j = 0;
 
 			// Obstacle 1
@@ -480,12 +484,21 @@ int main(){
 			
 			
 			// Obstacle 2
-			/*cmd_followline(missions, bl, 0.2, irdistfrontmiddle, 0.2);
+			cmd_followline(missions, bl, 0.2, irdistfrontmiddle, 0.2);
+			cmd_fwd(missions, 0.16, 0.1);
 			cmd_drive(missions,crossingblack,0,0.1);
 			cmd_fwd(missions, 0.16, 0.1);
-			cmd_fwd(missions, -1, -0.1);
-			cmd_turnr(missions,0.1,-90);
-			*/
+			cmd_fwd(missions, -1, -0.2);
+			cmd_turnr(missions,0.2,-90);
+			cmd_drive(missions,crossingblack,0,0.2);
+			cmd_fwd(missions, 0.2, 0.1);
+			cmd_turnr(missions,0.2,90);
+			cmd_drive(missions,crossingblack,0,0.2);
+			cmd_fwd(missions, 0.2, 0.25);
+			cmd_turnr(missions, 0.2,90);
+			cmd_followline(missions, bm, 0.2, crossingblack, 0);
+			cmd_fwd(missions, 0.225, 0.2);
+			cmd_followline(missions, bm, 0.2, crossingblack, 0);
 			
 			// drive @v0.2 : ($blacklinefound==1)
 			// fwd 0.20
@@ -822,9 +835,13 @@ void update_motcon(motiontype *p, odotype *o){
 
 	case mot_move:
 		driven_dist = (p->right_pos + p->left_pos) / 2 - p->startpos; 
+<<<<<<< HEAD
 		//printf("driven_dist: %f\n", driven_dist);
 		d = fabs(p->dist - driven_dist); 						// remaining distance
 		//printf("d: %f\n", d);
+=======
+		d = fabs(p->dist - driven_dist); 						// remaining distance
+>>>>>>> 2071708ce7d11e9cdb01915a254b66d378131287
 
 		// We need to deaccelerate
 		if ((deaccel_flag) || (fabs(p->currentspeed) >= sqrt(2 * max_acceleration * d))){ 
@@ -1470,7 +1487,8 @@ void cmd_followwall(double missions[100][7], int condition, double distance, dou
 void command(double missions[100][7], int mission, int condition,
  double condition_parameter, double speed, int linetype, double distance, double angle){
 		
-		static int command_no = 0;
+		//static int command_no = 0;
+		int command_no = update_command_no();
 			
 		missions[command_no][0] = mission;
 		missions[command_no][1] = condition;
@@ -1480,7 +1498,7 @@ void command(double missions[100][7], int mission, int condition,
 		missions[command_no][5] = distance;
 		missions[command_no][6] = angle;
 
-		command_no += 1;
+		//command_no += 1;
  
 }
 
