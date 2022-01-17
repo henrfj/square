@@ -1,4 +1,4 @@
 # square
 Learning about SMR 
-31385 - Autonomous Systems
+31385 - Autonomous Robot Systems
 DTU
