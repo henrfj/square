@@ -64,7 +64,7 @@ getoutputref(const char *sym_name, symTableElement *tab)
 #define WHEEL_DIAMETER 0.06522 /* m */
 #define WHEEL_SEPARATION 0.26  /* m */
 #define DELTA_M (M_PI * WHEEL_DIAMETER / 2000)
-#define ROBOTPORT 8000 //24902
+#define ROBOTPORT 24902 //8000 //24902
 #define MAXINT 65536
 #define TIMETIC 0.01
 #define P_GAIN_ANGLE 0.05
@@ -235,7 +235,7 @@ enum linetypes {
 };
 
 
-// void write_log(double log[MAXINT][7]) //here
+// void write_log(double log[MAXINT][7]) //here here
 // {
 //     FILE * fPtr;
 //     fPtr = fopen("/home/smr/offline/square/log.dat", "w");
