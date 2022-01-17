@@ -72,8 +72,8 @@ getoutputref(const char *sym_name, symTableElement *tab)
 #define WHITELINE 94 	// SIM 255, 94 for white paper, white tape was about 84
 #define GREYLINE 80  	//SIM 128, background dependent on shadow and light
 #define BLACKLINE 54  	// SIM 0, BLACK TAPE IS ABOUT 
-#define KA 11.0 //16.0
-#define KB 77.0 //76.0
+#define KA 10.5//10.0 //16.0
+#define KB 83  //77.0 //76.0
 
 typedef struct
 {							 //input signals
