@@ -235,36 +235,36 @@ enum linetypes {
 };
 
 
-void write_log(double log[MAXINT][7]) //here
-{
-    FILE * fPtr;
-    fPtr = fopen("/home/smr/offline/square/log.dat", "w");
-    if(fPtr == NULL)
-    {
-        printf("Unable to create file.\n"); // File not created hence exit
-    }
+// void write_log(double log[MAXINT][7]) //here
+// {
+//     FILE * fPtr;
+//     fPtr = fopen("/home/smr/offline/square/log.dat", "w");
+//     if(fPtr == NULL)
+//     {
+//         printf("Unable to create file.\n"); // File not created hence exit
+//     }
     
-    for(int i = 0; i < MAXINT; i++){
-      fprintf(fPtr,"%f %f %f %f %f %f %f\n",
-	   log[i][0],log[i][1],log[i][2], log[i][3], log[i][4], log[i][5], log[i][6]); // Write data to file
-   }
-    fclose(fPtr); // Close file to save file data
-}
+//     for(int i = 0; i < MAXINT; i++){
+//       fprintf(fPtr,"%f %f %f %f %f %f %f\n",
+// 	   log[i][0],log[i][1],log[i][2], log[i][3], log[i][4], log[i][5], log[i][6]); // Write data to file
+//    }
+//     fclose(fPtr); // Close file to save file data
+// }
 
 
-void write_laser_log(double laserpar[10]){
-	//TODO clear the file before run.
-    FILE * fPtr;
-    fPtr = fopen("/home/smr/offline/square/laserpar.dat", "a"); //a for appending not overwriting
-    if(fPtr == NULL)
-    {
-        printf("Unable to create file.\n"); // File not created hence exit
-    }
-    fprintf(fPtr,"%f %f %f %f %f %f %f %f %f %f\n",
-	   laserpar[0], laserpar[1], laserpar[2], laserpar[3], laserpar[4], laserpar[5], laserpar[6],
-	    laserpar[7], laserpar[8], laserpar[9]); // Write data to file
-    fclose(fPtr); // Close file to save file data
-}
+// void write_laser_log(double laserpar[10]){
+// 	//TODO clear the file before run.
+//     FILE * fPtr;
+//     fPtr = fopen("/home/smr/offline/square/laserpar.dat", "a"); //a for appending not overwriting
+//     if(fPtr == NULL)
+//     {
+//         printf("Unable to create file.\n"); // File not created hence exit
+//     }
+//     fprintf(fPtr,"%f %f %f %f %f %f %f %f %f %f\n",
+// 	   laserpar[0], laserpar[1], laserpar[2], laserpar[3], laserpar[4], laserpar[5], laserpar[6],
+// 	    laserpar[7], laserpar[8], laserpar[9]); // Write data to file
+//     fclose(fPtr); // Close file to save file data
+// }
 
 
 int main(){
@@ -396,10 +396,9 @@ int main(){
 	* Later fix the overflow.
 	*/
 
-	double logg[MAXINT][7]; 
-	int log_index = 0;
-
-	clock_t start_time = clock();
+	//double logg[MAXINT][7]; 
+	//int log_index = 0;
+	//clock_t start_time = clock();
 
 	while (running){
 		
@@ -639,7 +638,7 @@ int main(){
 		speedr->data[0] = 100 * mot.motorspeed_r;
 		speedr->updated = 1;
 
-		write_laser_log(laserpar);
+		//write_laser_log(laserpar);
 		
 		if (time % 100 == 0){
 			/*
@@ -656,22 +655,22 @@ int main(){
 
 
 		// Do some logging
-		if (log_index == MAXINT){
-			printf("looped around\n");
-			log_index = 0;
-		}
+		// if (log_index == MAXINT){
+		// 	printf("looped around\n");
+		// 	log_index = 0;
+		// }
 		
-		clock_t current_time = clock();
-		double time_spent = (double)(current_time - start_time) / 10000; //TODO: use time() function instead 
+		// clock_t current_time = clock();
+		// double time_spent = (double)(current_time - start_time) / 10000; //TODO: use time() function instead 
 
-		logg[log_index][0] = mission.time; 		// no. tics for the current mission.
-		logg[log_index][1] = mot.motorspeed_l;	// 
-		logg[log_index][2] = mot.motorspeed_r;	//
-		logg[log_index][3] = time_spent;		// "time spent" - using clock and a no. pulled out of our asses.
-		logg[log_index][4] = odo.x_pos;			// x pos of robot
-		logg[log_index][5] = odo.y_pos;			// y pos of robot
-		logg[log_index][6] = odo.theta;			// absolute theta of robot
-		log_index++;
+		// logg[log_index][0] = mission.time; 		// no. tics for the current mission.
+		// logg[log_index][1] = mot.motorspeed_l;	// 
+		// logg[log_index][2] = mot.motorspeed_r;	//
+		// logg[log_index][3] = time_spent;		// "time spent" - using clock and a no. pulled out of our asses.
+		// logg[log_index][4] = odo.x_pos;			// x pos of robot
+		// logg[log_index][5] = odo.y_pos;			// y pos of robot
+		// logg[log_index][6] = odo.theta;			// absolute theta of robot
+		// log_index++;
 
 	} /* end of main control loop */
 	
@@ -681,7 +680,7 @@ int main(){
 	speedr->updated = 1;
 
 	// write the log to a .dat file
-	write_log(logg);
+	//write_log(logg);
 	//
 
 	rhdSync();
