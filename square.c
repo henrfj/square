@@ -1017,7 +1017,8 @@ void update_motcon(motiontype *p, odotype *o){
 			irsensor_transformer(odo.irsensor, irdistances);
 			go_on = (p->ir_dist) < (irdistances[2]);
 			printf("IR front middle %f \n", irdistances[2]); //zde
-			printf("Distance d %d \n", go_on); //zde
+			printf("Desired value %f \n", p->ir_dist);
+			printf("go_on %d \n", go_on); //zde
 		}else if(p->condition_type==crossingblack){
 			// Fill irdistances with meter data
 			go_on=!crossingblackline(line_intensity);
