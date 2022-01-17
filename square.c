@@ -444,8 +444,13 @@ int main(){
 		case ms_init:
 			// MISSION ARRAY: ms, cond, condparam, speed, linetype, distance, angle
 			mission.state = ms_houston;
-			mission_lenght = 25;
+			mission_lenght = 0;
 			j = 0;
+
+			/*Interesting observations:
+				- You cannot use two followline commands right after each other 
+				- 
+			*/
 
 			// Obstacle 1 works
 			cmd_followline(missions,br,0.12,irdistfrontmiddle,0.2);
@@ -482,6 +487,7 @@ int main(){
 			
 
 			// Obstacle 4
+			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 90*M_PI/180);
 			command(missions, ms_wallhug, irdistright_more, 0.8, 0.1, 0, 0.3, 0);
 			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.40, 0);
 			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
@@ -561,7 +567,7 @@ int main(){
 			//command(missions, ms_wallhug, irdistleft_more, 0.8, 0.1, 0, 0.3, 0);
 			//cmd_turnr(missions, 0.2, 90);
 			/////////////////    END OF MISSIONS    /////////////////
-
+			mission_lenght = update_command_no();
 			break;
 
 		case ms_houston:
