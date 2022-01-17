@@ -68,9 +68,9 @@ getoutputref(const char *sym_name, symTableElement *tab)
 #define MAXINT 65536
 #define TIMETIC 0.01
 #define P_GAIN_ANGLE 0.05
-#define WHITELINE 255
-#define GREYLINE 128
-#define BLACKLINE 0
+#define WHITELINE 94 	// SIM 255, 94 for white paper, white tape was about 84
+#define GREYLINE 80  	//SIM 128, background dependent on shadow and light
+#define BLACKLINE 54  	// SIM 0, BLACK TAPE IS ABOUT 
 #define KA 16.0
 #define KB 76.0
 
@@ -1209,12 +1209,12 @@ void irsensor_transformer(int irdata[5], float irdistances[5]){
 
 // }
 
-void linesensor_normalizer_2(int linedata[8], float line_intensity[7]){
+void linesensor_normalizer_2(int linedata[8], float line_intensity[8]){
     for (int i = 0; i < 8; i ++){
         line_intensity[i] = (float)(linedata[i] - BLACKLINE) / (float)(WHITELINE - BLACKLINE);
-        if (line_intensity[i]<0.3){
+        if (line_intensity[i]<0.4){ // 0.3
             line_intensity[i]=0;
-        }else if (line_intensity[i]>0.7){
+        }else if (line_intensity[i]>0.89){ // 0.7
             line_intensity[i]=1;
         }else{
             line_intensity[i]=0.5;
