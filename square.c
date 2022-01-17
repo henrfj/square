@@ -453,6 +453,7 @@ int main(){
 			*/
 
 			// Obstacle 1 works
+
 			cmd_followline(missions,br,0.12,irdistfrontmiddle,0.2);
 			cmd_turnr(missions,0.2,180);
 			cmd_followline(missions,bm,0.1,drivendist,0.7);
@@ -483,7 +484,8 @@ int main(){
 			cmd_drive(missions,drivendist,0.2,0.1);
 			cmd_followline(missions,bm,0.1,foundGate,0);
 			cmd_turnr(missions,0.1,90);
-			cmd_drive(missions,dist_lida,0.3,0.1);
+			
+			cmd_drive(missions,dist_lida,0.2,0.1);
 			
 
 			// Obstacle 4
