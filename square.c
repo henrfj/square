@@ -71,8 +71,8 @@ getoutputref(const char *sym_name, symTableElement *tab)
 #define WHITELINE 94 	// SIM 255, 94 for white paper, white tape was about 84
 #define GREYLINE 80  	//SIM 128, background dependent on shadow and light
 #define BLACKLINE 54  	// SIM 0, BLACK TAPE IS ABOUT 
-#define KA 16.0
-#define KB 76.0
+#define KA 11.0 //16.0
+#define KB 77.0 //76.0
 
 typedef struct
 {							 //input signals
@@ -457,7 +457,7 @@ int main(){
 			cmd_followline(missions,bm,0.1,drivendist,0.7);
 			cmd_followline(missions,bm,0.1,crossingblack,0);
 			cmd_turnr(missions,0.2,180);
-			
+
 			// Obstacle 2 works
 			cmd_followline(missions, bl, 0.2, irdistfrontmiddle, 0.2);
 			cmd_fwd(missions, 0.16, 0.1);
@@ -541,7 +541,7 @@ int main(){
 			// Enter the garage
 			command(missions, ms_followline, drivendist, 0.35, 0.2, bm, 0, 0);
 			command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.2, bm, 0, 0);
-			
+
 			/*	
 			/////////////////////    MISSIONS    ///////////////////// 
 			mission_lenght = 5;
