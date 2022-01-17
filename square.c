@@ -65,7 +65,7 @@ getoutputref(const char *sym_name, symTableElement *tab)
 #define WHEEL_DIAMETER 0.06522 /* m */
 #define WHEEL_SEPARATION 0.26  /* m */
 #define DELTA_M (M_PI * WHEEL_DIAMETER / 2000)
-#define ROBOTPORT 24902 //24902
+#define ROBOTPORT 24902 //8000//24902 //8000
 #define MAXINT 65536
 #define TIMETIC 0.01
 #define P_GAIN_ANGLE 0.05
@@ -574,7 +574,6 @@ int main(){
 		case ms_houston:
 			if (j==1){
 				printf("boxdist= %f\n",(fabs(odo.y_pos)+0.2+0.26));
-				
 			}
 			if(j==mission_lenght){
 				printf("All missions complete\n");
@@ -1017,6 +1016,8 @@ void update_motcon(motiontype *p, odotype *o){
 			// Fill irdistances with meter data
 			irsensor_transformer(odo.irsensor, irdistances);
 			go_on = (p->ir_dist) < (irdistances[2]);
+			printf("IR front middle %f \n", irdistances[2]); //zde
+			printf("Distance d %d \n", go_on); //zde
 		}else if(p->condition_type==crossingblack){
 			// Fill irdistances with meter data
 			go_on=!crossingblackline(line_intensity);
