@@ -69,9 +69,9 @@ getoutputref(const char *sym_name, symTableElement *tab)
 #define MAXINT 65536
 #define TIMETIC 0.01
 #define P_GAIN_ANGLE 0.05
-#define WHITELINE 94 	// SIM 255, 94 for white paper, white tape was about 84
+#define WHITELINE 255//94 	// SIM 255, 94 for white paper, white tape was about 84
 #define GREYLINE 80  	//SIM 128, background dependent on shadow and light
-#define BLACKLINE 54  	// SIM 0, BLACK TAPE IS ABOUT 
+#define BLACKLINE 0//54  	// SIM 0, BLACK TAPE IS ABOUT 
 #define KA 10.5//10.0 //16.0
 #define KB 83  //77.0 //76.0
 
@@ -453,8 +453,7 @@ int main(){
 			*/
 
 			// Obstacle 1 works
-			cmd_fwd(missions,0.2,0.05); //delete
-			cmd_followline(missions,bm,0.1,drivendist,0.7); //delete
+			cmd_followline(missions,bm,0.1,drivendist,2); //delete
 			cmd_followline(missions,br,0.12,irdistfrontmiddle,0.2);
 			cmd_turnr(missions,0.2,180);
 			cmd_followline(missions,bm,0.1,drivendist,0.7);
