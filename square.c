@@ -468,18 +468,18 @@ int main(){
 
 			// MISSION ARRAY: ms, cond, condparam, speed, linetype, distance, angle
 			mission.state = ms_houston;
-			mission_lenght = 15;
+			mission_lenght = 25;
 			j = 0;
 
-			// Obstacle 1
-			// command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.12, br, 0, 0);
-			// command(missions, ms_turn, 0, 0, 0.2, 0, 0, 180*M_PI/180);
-			// command(missions, ms_followline, drivendist, 0, 0.15, 0, 0.7, 0);
-			// command(missions, ms_followline, crossingblack, 0, 0.15, bm, 0, 0);
-			// command(missions, ms_turn, 0, 0, 0.2, 0, 0, 180*M_PI/180);
+			// Obstacle 1 works
 			
+			cmd_followline(missions,br,0.12,irdistfrontmiddle,0.2);
+			cmd_turnr(missions,0.2,180);
+			cmd_followline(missions,bm,0.1,drivendist,0.7);
+			cmd_followline(missions,bm,0.1,crossingblack,0);
+			cmd_turnr(missions,0.2,180);
 			
-			// Obstacle 2
+			// Obstacle 2 works
 			cmd_followline(missions, bl, 0.2, irdistfrontmiddle, 0.2);
 			cmd_fwd(missions, 0.16, 0.1);
 			cmd_drive(missions,crossingblack,0,0.1);
@@ -495,27 +495,16 @@ int main(){
 			cmd_followline(missions, bm, 0.2, crossingblack, 0);
 			cmd_fwd(missions, 0.225, 0.2);
 			cmd_followline(missions, bm, 0.2, crossingblack, 0);
-			
-			// drive @v0.2 : ($blacklinefound==1)
-			// fwd 0.20
-			// turn -360 : ($crossingblackline==1)
-			// turn 90
-			// followline "bm" @v 0.22 : ($crossingblackline==1)
-			// fwd 0.25
-			// turn 90
-			// followline "bm" @v 0.22 : ($crossingblackline==1)
-			// fwd 0.225
-			// followline "bm" @v 0.22 : ($crossingblackline==1)		
-			
+		
 
 			// Obstacle 3 works
 
-			/*cmd_followline(missions,bm,0.1,foundGate,0);
+			cmd_followline(missions,bm,0.1,foundGate,0);
 			cmd_drive(missions,drivendist,0.2,0.1);
 			cmd_followline(missions,bm,0.1,foundGate,0);
 			cmd_turnr(missions,0.1,90);
 			cmd_drive(missions,dist_lida,0.3,0.1);
-			*/
+			
 
 			// Obstacle 4
 			
@@ -574,7 +563,7 @@ int main(){
 			//cmd_turnr(missions, 0.2, -90);
 			//command(missions, ms_wallhug, irdistleft_more, 0.8, 0.1, 0, 0.3, 0);
 			//cmd_turnr(missions, 0.2, 90);
-			/////////////////    END OF MISSIONS    /////////////////<<<<<<< HEAD
+			/////////////////    END OF MISSIONS    /////////////////
 
 			break;
 
