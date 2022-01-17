@@ -482,7 +482,6 @@ int main(){
 			cmd_drive(missions,drivendist,0.2,0.1);
 			cmd_followline(missions,bm,0.1,foundGate,0);
 			cmd_turnr(missions,0.1,90);
-			
 			cmd_drive(missions,dist_lida,0.25,0.1);
 			
 
@@ -543,7 +542,7 @@ int main(){
 			// Enter the garage
 			command(missions, ms_followline, drivendist, 0.35, 0.2, bm, 0, 0);
 			command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.2, bm, 0, 0);
-
+			
 			/*	
 			/////////////////////    MISSIONS    ///////////////////// 
 			mission_lenght = 5;
@@ -572,11 +571,12 @@ int main(){
 
 		case ms_houston:
 			if (j==1){
-				printf("boxdist= %f\n",(odo.x_pos+0.2+0.26));
+				printf("boxdist= %f\n",(fabs(odo.y_pos)+0.15+0.25));
+				
 			}
 			if(j==mission_lenght){
 				printf("All missions complete\n");
-				
+				 
 				mission.state = ms_end;
 				break;
 			}
