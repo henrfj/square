@@ -1,6 +1,7 @@
 /*
  * An example SMR program.
  *
+ * SMR v1.1
  */
 #include <stdio.h>
 #include <stdlib.h>
