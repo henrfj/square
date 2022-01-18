@@ -65,13 +65,13 @@ getoutputref(const char *sym_name, symTableElement *tab)
 #define WHEEL_DIAMETER 0.06522 /* m */
 #define WHEEL_SEPARATION 0.26  /* m */
 #define DELTA_M (M_PI * WHEEL_DIAMETER / 2000)
-#define ROBOTPORT 24902 //8000//24902 //8000
+#define ROBOTPORT 8000 //8000//24902 //8000
 #define MAXINT 65536
 #define TIMETIC 0.01
 #define P_GAIN_ANGLE 0.05
-#define WHITELINE 94 	// SIM 255, 94 for white paper, white tape was about 84
-#define GREYLINE 80  	//SIM 128, background dependent on shadow and light
-#define BLACKLINE 54  	// SIM 0, BLACK TAPE IS ABOUT 
+#define WHITELINE 255 	// SIM 255, 94 for white paper, white tape was about 84
+#define GREYLINE 128 	//SIM 128, background dependent on shadow and light, was around 80
+#define BLACKLINE 0  	// SIM 0, BLACK TAPE / paper IS ABOUT 54
 #define KA 10.5//10.0 //16.0
 #define KB 83  //77.0 //76.0
 
@@ -453,7 +453,8 @@ int main(){
 			*/
 
 			// Obstacle 1 works
-			//cmd_followline(missions,bm,0.1,drivendist,2); //delete
+			cmd_followline(missions,bm,0.1,drivendist,2); //delete
+			/*
 			cmd_followline(missions,br,0.12,irdistfrontmiddle,0.2);
 			cmd_turnr(missions,0.2,180);
 			cmd_followline(missions,bm,0.1,drivendist,0.7);
@@ -544,6 +545,7 @@ int main(){
 			command(missions, ms_followline, drivendist, 0.35, 0.2, bm, 0, 0);
 			command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.2, bm, 0, 0);
 
+			*/
 			/*	
 			/////////////////////    MISSIONS    ///////////////////// 
 			mission_lenght = 5;
@@ -1205,24 +1207,22 @@ void irsensor_transformer(int irdata[5], float irdistances[5]){
 	}
 }
 
-// void linesensor_normalizer(int linedata[8]){
-// 	for (int i = 0; i < 8; i ++){
-// 		linedata[i] = (linedata[i] - BLACKLINE) / (WHITELINE - BLACKLINE);
-// 	}
-
-// }
 
 void linesensor_normalizer_2(int linedata[8], float line_intensity[8]){
     for (int i = 0; i < 8; i ++){
-        line_intensity[i] = (float)(linedata[i] - BLACKLINE) / (float)(WHITELINE - BLACKLINE);
-        if (line_intensity[i]<0.4){ // 0.3
+        line_intensity[i] = (float)(linedata[i] - BLACKLINE) / (float)(WHITELINE - BLACKLINE); // 0.15
+        
+		if (line_intensity[i]<0.15){ // Will accept all values between 54->60 as black
             line_intensity[i]=0;
         }else if (line_intensity[i]>0.89){ // 0.7
             line_intensity[i]=1;
         }else{
             line_intensity[i]=0.5;
         }
-    }        
+
+		printf("%3d (%0.1f)  ", linedata[i], line_intensity[i]);
+    }
+	printf("\n");
 }
 
 int lowest_intensity(float linedata[8], char followleft){
