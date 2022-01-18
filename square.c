@@ -479,11 +479,10 @@ int main(){
 
 			/*Interesting observations:
 				- You cannot use two followline commands right after each other 
-				- 
+				- Turn on or off simulated acceleration using ACCELERATION macro.
 			*/
 
 			// Obstacle 1 works
-			cmd_followline(missions,br,0.1,irdistfrontmiddle,0.2); //delete
 			/*
 			cmd_followline(missions,br,0.12,irdistfrontmiddle,0.2);
 			cmd_turnr(missions,0.2,180);
@@ -513,7 +512,7 @@ int main(){
 			cmd_followline(missions,bm,0.1,foundGate,0);
 			cmd_drive(missions,drivendist,0.2,0.1);
 			cmd_followline(missions,bm,0.1,foundGate,0);
-			cmd_turnr(missions,0.1,90);
+			cmd_turnr(missions,0.1,90); 
 			cmd_drive(missions,dist_lida,0.25,0.1);
 			
 
@@ -538,6 +537,8 @@ int main(){
 			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
 			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
 			
+			*/
+
 			// Obstacle 6
 			// Find the garage
 			command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.2, bm, 0, 0);
@@ -574,8 +575,8 @@ int main(){
 			// Enter the garage
 			command(missions, ms_followline, drivendist, 0.35, 0.2, bm, 0, 0);
 			command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.2, bm, 0, 0);
-
-			*/
+			
+			
 			/*	
 			/////////////////////    MISSIONS    ///////////////////// 
 			mission_lenght = 5;
@@ -856,46 +857,63 @@ void update_motcon(motiontype *p, odotype *o){
 
 	case mot_move:
 		driven_dist = (p->right_pos + p->left_pos) / 2 - p->startpos; 
-		d = fabs(p->dist - driven_dist); // remaining distance
+		if (ACCELERATION){
+			d = fabs(p->dist - driven_dist); // remaining distance
+			// We need to deaccelerate
+			if ((deaccel_flag) || (fabs(p->currentspeed) >= sqrt(2 * max_acceleration * d))){ 
+				if (!deaccel_flag){
+					deaccel_flag = 1;
+				}
 
-		// We need to deaccelerate
-		if ((deaccel_flag) || (fabs(p->currentspeed) >= sqrt(2 * max_acceleration * d))){ 
-			if (!deaccel_flag){
-				deaccel_flag = 1;
-			}
-			
-			// if (p->currentspeed > clock_acceleration){
-			// 	p->currentspeed -= clock_acceleration;
+				if (p->currentspeed > clock_acceleration){ // Accelerate
+					p->currentspeed -= clock_acceleration;
+				}
+				else if(p->currentspeed < -clock_acceleration){
+					p->currentspeed += clock_acceleration;
+				
+				}else{ // Completely stopped
+					p->currentspeed = 0;
+					p->finished = 1;
+					deaccel_flag = 0;
+				}
+				p->motorspeed_l = p->currentspeed;
+				p->motorspeed_r = p->currentspeed;
 
-			if (p->currentspeed > clock_acceleration){ // Accelerate
-				p->currentspeed -= clock_acceleration;
+			}// Keep accelerating or moving forward
+			else{ 
+				if ((p->speedcmd - p->currentspeed) > clock_acceleration){ // Accelerate
+					p->currentspeed += clock_acceleration;
+				}
+				else if((p->speedcmd - p->currentspeed) < clock_acceleration){
+					p->currentspeed -= clock_acceleration;
+				}
+				else{ // Max speed 
+					p->currentspeed = p->speedcmd;
+				}
+				p->motorspeed_l = p->currentspeed;
+				p->motorspeed_r = p->currentspeed;
 			}
-			else if(p->currentspeed < -clock_acceleration){
-				p->currentspeed += clock_acceleration;
-			
-			}else{ // Completely stopped
-				p->currentspeed = 0;
-				p->finished = 1;
-				deaccel_flag = 0;
+		}else{
+			if(p->speedcmd>=0){ //Forward
+				if (p->dist <= driven_dist){
+					p->currentspeed = 0;
+					p->finished = 1;
+				}else{
+					p->currentspeed=p->speedcmd;
+				}
+				p->motorspeed_l = p->currentspeed;
+				p->motorspeed_r = p->currentspeed;
+			}else{ //Reversing
+				if (p->dist >= driven_dist){
+					p->currentspeed = 0;
+					p->finished = 1;
+				}else{
+					p->currentspeed=p->speedcmd;
+				}
+				p->motorspeed_l = p->currentspeed;
+				p->motorspeed_r = p->currentspeed;
 			}
-			p->motorspeed_l = p->currentspeed;
-			p->motorspeed_r = p->currentspeed;
-
-		}// Keep accelerating or moving forward
-		else{ 
-			if ((p->speedcmd - p->currentspeed) > clock_acceleration){ // Accelerate
-				p->currentspeed += clock_acceleration;
-			}
-			else if((p->speedcmd - p->currentspeed) < clock_acceleration){
-				p->currentspeed -= clock_acceleration;
-			}
-			else{ // Max speed 
-				p->currentspeed = p->speedcmd;
-			}
-			p->motorspeed_l = p->currentspeed;
-			p->motorspeed_r = p->currentspeed;
-		}
-		//printf("Current speed: %f\n", p->currentspeed);	
+		}	
 		break;
 
 	case mot_drive:
@@ -917,24 +935,19 @@ void update_motcon(motiontype *p, odotype *o){
 
 		}else if(p->condition_type==irdistright_more){
 			irsensor_transformer(odo.irsensor, irdistances);
-			//printf("Ir-right: %f \tp->ir_dist %f \t Bool: %d\n", irdistances[4], p->ir_dist, (irdistances[4] > p->ir_dist));
 			if (irdistances[4] > p->ir_dist){
 				deaccel_flag=1;
 			}
 
 		}else if(p->condition_type==irdistleft_more){
 			irsensor_transformer(odo.irsensor, irdistances);
-			//printf("Ir-right: %f \tp->ir_dist %f \t Bool: %d\n", irdistances[4], p->ir_dist, (irdistances[4] > p->ir_dist));
-
 			if (irdistances[0] > p->ir_dist){
 				deaccel_flag=1;
 			}
 
 		}else if(p->condition_type == dist_lida){
 			d = 20; 
-			//printf("laser dist: %f decired dist: %f\n",laserpar[4],p->ir_dist);
 			deaccel_flag=(lida_dist(4,p->ir_dist));
-			//printf("deaccelerationflag: %d\n",deaccel_flag);
 
 		}else if(p->condition_type==crossingblack){
 			
@@ -948,37 +961,46 @@ void update_motcon(motiontype *p, odotype *o){
 		}
 
 
-		//printf("Remaining distance:\t %f \t Driven distance: %f\n", d, odo.x_pos);
+		if(ACCELERATION){
+			// We need to deaccelerate
+			if ((deaccel_flag) || (p->currentspeed >= sqrt(2 * max_acceleration * d))){ 
+				if (!deaccel_flag){
+					deaccel_flag = 1;
+				}
+				
+				if (fabs(0 - p->currentspeed) > clock_acceleration){
+					p->currentspeed -= clock_acceleration;
+				}else{ // Completely stopped
+					p->currentspeed = 0;
+					p->finished = 1;
+					deaccel_flag = 0;
+				}
+				p->motorspeed_l = p->currentspeed;
+				p->motorspeed_r = p->currentspeed;
 
-		// We need to deaccelerate
-		if ((deaccel_flag) || (p->currentspeed >= sqrt(2 * max_acceleration * d))){ 
-			if (!deaccel_flag){
-				deaccel_flag = 1;
+			}// Keep accelerating or moving forward
+			else{ 
+				if (fabs(p->speedcmd - p->currentspeed) > clock_acceleration){ // Accelerate
+					p->currentspeed += clock_acceleration;
+				}else{ // Max speed 
+					p->currentspeed = p->speedcmd;
+				}
+				p->motorspeed_l = p->currentspeed;
+				p->motorspeed_r = p->currentspeed;
 			}
-			
-			if (fabs(0 - p->currentspeed) > clock_acceleration){
-				p->currentspeed -= clock_acceleration;
-			}else{ // Completely stopped
+		}else{ // NO Acceleration
+			if (d<=0 || deaccel_flag){
 				p->currentspeed = 0;
 				p->finished = 1;
 				deaccel_flag = 0;
-			}
-			p->motorspeed_l = p->currentspeed;
-			p->motorspeed_r = p->currentspeed;
-
-		}// Keep accelerating or moving forward
-		else{ 
-			if (fabs(p->speedcmd - p->currentspeed) > clock_acceleration){ // Accelerate
-				p->currentspeed += clock_acceleration;
-			}else{ // Max speed 
+				p->motorspeed_l = p->currentspeed;
+				p->motorspeed_r = p->currentspeed;
+			}else{
 				p->currentspeed = p->speedcmd;
+				p->motorspeed_l = p->currentspeed;
+				p->motorspeed_r = p->currentspeed;
 			}
-			p->motorspeed_l = p->currentspeed;
-			p->motorspeed_r = p->currentspeed;
 		}
-		//printf("Current speed: %f\n", p->currentspeed);	
-		break;
-
 		break;
 
 	case mot_turn:
@@ -1046,16 +1068,15 @@ void update_motcon(motiontype *p, odotype *o){
 		}else if(p->condition_type==irdistfrontmiddle){
 			// Solution one: single point
 			irsensor_transformer(odo.irsensor, irdistances);
-			printf("IRFM § Single point: %0.2f § ", irdistances[2]);
-			
-			// Solution two: Average in front
-			printf("avg three: %0.2f § ",((irdistances[2]+irdistances[3]+irdistances[1])/3));
+			//printf("IRFM § Single point: %0.2f § ", irdistances[2]);
+			go_on = (p->ir_dist) < (irdistances[2]);
 
+			// Solution two: Average in front
+			//printf("avg three: %0.2f § ",((irdistances[2]+irdistances[3]+irdistances[1])/3));
 			// Solution three: average in time
 			irsensor_transformer_avg(o->avgir, irdistances); 
-			printf("avg time: %0.2f\n", irdistances[2]);
-
-			go_on = (p->ir_dist) < (irdistances[2]);
+			//printf("avg time: %0.2f\n", irdistances[2]);
+			
 
 		}else if(p->condition_type==crossingblack){
 			// Fill irdistances with meter data
@@ -1108,6 +1129,7 @@ void update_motcon(motiontype *p, odotype *o){
 			if (!go_on){
 					p->currentspeed = 0;
 					p->finished = 1;
+					deaccel_flag = 0;
 					go_on = 1;
 					p->motorspeed_l = p->currentspeed;
 					p->motorspeed_r = p->currentspeed;
@@ -1159,28 +1181,43 @@ void update_motcon(motiontype *p, odotype *o){
 		if (!go_on){
 			deaccel_flag =1;
 		}
+		if(ACCELERATION){
+			// Deacceleration
+			if ((deaccel_flag)){ 
+				if (fabs(0 - p->currentspeed) > clock_acceleration){
+					p->currentspeed -= clock_acceleration;
+				}else{ // Completely stopped
+					p->currentspeed = 0;
+					p->finished = 1;
+					deaccel_flag = 0;
+				}
+				p->motorspeed_l = p->currentspeed;
+				p->motorspeed_r = p->currentspeed;
 
-		// Deacceleration
-		if ((deaccel_flag) ){ 
-			if (fabs(0 - p->currentspeed) > clock_acceleration){
-				p->currentspeed -= clock_acceleration;
-			}else{ // Completely stopped
-				p->currentspeed = 0;
-				p->finished = 1;
-				deaccel_flag = 0;
+			}// Keep hugging wall
+			else{ 
+				if (fabs(p->speedcmd - p->currentspeed) > clock_acceleration){ // Accelerate
+					p->currentspeed += clock_acceleration;
+				}else{ // Max speed 
+					p->currentspeed = p->speedcmd;
+				}
+				p->motorspeed_l = p->currentspeed - dV / 2;
+				p->motorspeed_r = p->currentspeed + dV / 2;
 			}
-			p->motorspeed_l = p->currentspeed;
-			p->motorspeed_r = p->currentspeed;
-
-		}// Keep hugging wall
-		else{ 
-			if (fabs(p->speedcmd - p->currentspeed) > clock_acceleration){ // Accelerate
-				p->currentspeed += clock_acceleration;
-			}else{ // Max speed 
+		}else{
+			// No acceleration
+			if (!go_on){
+					p->currentspeed = 0;
+					p->finished = 1;
+					deaccel_flag = 0;
+					go_on = 1;
+					p->motorspeed_l = p->currentspeed;
+					p->motorspeed_r = p->currentspeed;
+			}else{
 				p->currentspeed = p->speedcmd;
+				p->motorspeed_l = p->currentspeed - dV / 2;
+				p->motorspeed_r = p->currentspeed + dV / 2;
 			}
-			p->motorspeed_l = p->currentspeed - dV / 2;
-			p->motorspeed_r = p->currentspeed + dV / 2;
 		}
 
 		break;
