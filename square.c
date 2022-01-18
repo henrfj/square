@@ -72,8 +72,9 @@ getoutputref(const char *sym_name, symTableElement *tab)
 #define WHITELINE 255 	// SIM 255, 94 for white paper, white tape was about 84
 #define GREYLINE 128 	//SIM 128, background dependent on shadow and light, was around 80
 #define BLACKLINE 0  	// SIM 0, BLACK TAPE / paper IS ABOUT 54
-#define KA 10.5//10.0 //16.0
-#define KB 83  //77.0 //76.0
+#define KA 16 //10.0 //SIM 16.0
+#define KB 76  //77.0 //SIM 76.0
+#define MAXIRDIST 0.9
 
 typedef struct
 {							 //input signals
@@ -96,6 +97,7 @@ typedef struct
 	int linesensor[8];
 	// IR-sensor array
 	int irsensor[5];
+	float avgir[5]; //Average ir-data
 	// total distance traveled
 	double traveldist;
 } odotype;
@@ -179,6 +181,8 @@ int hug_wall(int condition_type, double condition, double speed, double dist, in
 // void linesensor_normalizer(int  linedata[8]);
 void linesensor_normalizer_2(int linedata[8], float line_intensity[8]);
 void irsensor_transformer(int irdata[5], float irdistances[5]);
+void smooth_ir_data(int irdata[5], float avgir[5]);
+
 
 float center_of_gravity(float linedata[8], char color);
 int lowest_intensity(float linedata[8], char followleft);
@@ -421,7 +425,17 @@ int main(){
 		odo.right_enc = renc->data[0];
 		memcpy(odo.linesensor, linesensor->data, sizeof(odo.linesensor));
 		memcpy(odo.irsensor, irsensor->data, sizeof(odo.irsensor));
+		smooth_ir_data(odo.irsensor, odo.avgir);
 
+		//Test
+		float ir_distances[5];
+		irsensor_transformer(odo.irsensor, ir_distances);
+		for (int i = 0; i<5; i++){
+			printf("RAW: %4d\t AVG: %0.1f\t DIST %0.1f\t ", odo.irsensor[i], odo.avgir[i], ir_distances[i]);
+			printf("\n");
+		}
+		printf("\n");
+		
 		// Execute ODOMETRY
 		update_odo(&odo);
 
@@ -453,7 +467,7 @@ int main(){
 			*/
 
 			// Obstacle 1 works
-			cmd_followline(missions,bm,0.1,drivendist,2); //delete
+			cmd_followline(missions,bm,0.1,irdistfrontmiddle,0.2); //delete
 			/*
 			cmd_followline(missions,br,0.12,irdistfrontmiddle,0.2);
 			cmd_turnr(missions,0.2,180);
@@ -1017,9 +1031,9 @@ void update_motcon(motiontype *p, odotype *o){
 			// Fill irdistances with meter data
 			irsensor_transformer(odo.irsensor, irdistances);
 			go_on = (p->ir_dist) < (irdistances[2]);
-			printf("IR front middle %f \n", irdistances[2]); //zde
-			printf("Desired value %f \n", p->ir_dist);
-			printf("go_on %d \n", go_on); //zde
+			//printf("IR front middle %f \n", irdistances[2]); //zde
+			//printf("Desired value %f \n", p->ir_dist);
+			//printf("go_on %d \n", go_on); //zde
 		}else if(p->condition_type==crossingblack){
 			// Fill irdistances with meter data
 			go_on=!crossingblackline(line_intensity);
@@ -1201,9 +1215,40 @@ void update_motcon(motiontype *p, odotype *o){
 	}
 }
 
+void smooth_ir_data(int irdata[5], float avgir[5]){
+	static int smoot_ir[50][5]={0};
+	static int index=0;
+
+	// First insert new data into array
+	for (int i=0; i<5; i++){
+		smoot_ir[index][i]=irdata[i];
+		avgir[i] = 0; // Reset this array
+	}
+
+	// Then get the average data of all points, put into new array
+	for (int j=0; j<50; j++){
+		for (int i=0; i<5; i++){
+			avgir[i] += ((float)smoot_ir[j][i] / 50.0);
+		}
+	}
+
+	if (index==49){
+		index=0;
+	}else{
+		index++;
+	}
+}
+
+
 void irsensor_transformer(int irdata[5], float irdistances[5]){
+	/*irdata is raw ir-data. Irdistances are not.*/	
 	for (int i = 0; i < 5; i ++){
-		irdistances[i] = KA / ((float)irdata[i] - KB);
+		
+		irdistances[i] = (float)KA / ((float)irdata[i] - (float)KB);
+		
+		if (irdistances[i] < 0){ // Sometimes, instead of giving maxdist, it gave negative values.
+			irdistances[i] = MAXIRDIST;
+		}
 	}
 }
 
@@ -1220,9 +1265,9 @@ void linesensor_normalizer_2(int linedata[8], float line_intensity[8]){
             line_intensity[i]=0.5;
         }
 
-		printf("%3d (%0.1f)  ", linedata[i], line_intensity[i]);
+		//printf("%3d (%0.1f)  ", linedata[i], line_intensity[i]);
     }
-	printf("\n");
+	//printf("\n");
 }
 
 int lowest_intensity(float linedata[8], char followleft){
