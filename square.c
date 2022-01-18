@@ -453,7 +453,7 @@ int main(){
 			*/
 
 			// Obstacle 1 works
-			/*
+			
 			cmd_followline(missions,br,0.12,irdistfrontmiddle,0.2);
 			cmd_turnr(missions,0.2,180);
 			cmd_followline(missions,bm,0.1,drivendist,0.7);
@@ -479,11 +479,7 @@ int main(){
 		
 
 			// Obstacle 3 works
-<<<<<<< HEAD
 			
-=======
-			*/
->>>>>>> 37e796997b868d7ee7f03925fab05a507d4baa6e
 			cmd_followline(missions,bm,0.1,foundGate,0);
 			cmd_drive(missions,drivendist,0.2,0.1);
 			cmd_followline(missions,bm,0.1,foundGate,0);
