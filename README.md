@@ -1,4 +1,4 @@
 # square
 Learning about SMR 
-
-x
+31385 - Autonomous Robot Systems
+DTU
