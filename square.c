@@ -72,9 +72,23 @@ getoutputref(const char *sym_name, symTableElement *tab)
 #define WHITELINE 255 	// SIM 255, 94 for white paper, white tape was about 84
 #define GREYLINE 128 	//SIM 128, background dependent on shadow and light, was around 80
 #define BLACKLINE 0  	// SIM 0, BLACK TAPE / paper IS ABOUT 54
+
 #define KA 16 //10.0 //SIM 16.0
 #define KB 76  //77.0 //SIM 76.0
-#define MAXIRDIST 0.9
+
+#define KA0 16 //LEFT
+#define KB0 76 //LEFT
+#define KA1 16 //FRONTLEFT
+#define KB1 76 //FRONTLEFT
+#define KA2 16 //FRONTMIDDLE
+#define KB2 76 //FRONTMIDDLE
+#define KA3 16 //FRONTRIGHT
+#define KB3 76 //FRONTRIGHT
+#define KA4 16 //RIGHT
+#define KB4 76 //RIGHT
+
+#define MAXIRDIST 0.9 //Max distace of IR sensors (around 0.88)
+#define ACCELERATION 0 //Should we use acceleration in the code?
 
 typedef struct
 {							 //input signals
@@ -178,9 +192,9 @@ int follow_line(int condition_type, double condition, char linetype, double spee
 int lida_dist(int index, double length);
 int hug_wall(int condition_type, double condition, double speed, double dist, int time);
 
-// void linesensor_normalizer(int  linedata[8]);
-void linesensor_normalizer_2(int linedata[8], float line_intensity[8]);
+void linesensor_normalizer(int linedata[8], float line_intensity[8]);
 void irsensor_transformer(int irdata[5], float irdistances[5]);
+void irsensor_transformer_avg(float irdata[5], float irdistances[5]);
 void smooth_ir_data(int irdata[5], float avgir[5]);
 
 
@@ -428,6 +442,7 @@ int main(){
 		smooth_ir_data(odo.irsensor, odo.avgir);
 
 		//Test
+		/*
 		float ir_distances[5];
 		irsensor_transformer(odo.irsensor, ir_distances);
 		for (int i = 0; i<5; i++){
@@ -435,6 +450,7 @@ int main(){
 			printf("\n");
 		}
 		printf("\n");
+		*/
 		
 		// Execute ODOMETRY
 		update_odo(&odo);
@@ -467,7 +483,7 @@ int main(){
 			*/
 
 			// Obstacle 1 works
-			cmd_followline(missions,bm,0.1,irdistfrontmiddle,0.2); //delete
+			cmd_followline(missions,br,0.1,irdistfrontmiddle,0.2); //delete
 			/*
 			cmd_followline(missions,br,0.12,irdistfrontmiddle,0.2);
 			cmd_turnr(missions,0.2,180);
@@ -885,7 +901,7 @@ void update_motcon(motiontype *p, odotype *o){
 	case mot_drive:
 		/* Moving forward, with acceleration, under certain conditions */
 		d = 20;
-		linesensor_normalizer_2(odo.linesensor, line_intensity);
+		linesensor_normalizer(odo.linesensor, line_intensity);
 		
 		if(p->condition_type==drivendist){
 			driven_dist = (p->right_pos + p->left_pos) / 2 - p->startpos; 
@@ -1009,7 +1025,7 @@ void update_motcon(motiontype *p, odotype *o){
 		/*Follow a line under some condition*/
 
 		// 1 - normalize linesensor data
-		linesensor_normalizer_2(odo.linesensor, line_intensity);
+		linesensor_normalizer(odo.linesensor, line_intensity);
 
 
 		// 2 - Do the simple lowest intensity algorithm "fl"
@@ -1028,12 +1044,19 @@ void update_motcon(motiontype *p, odotype *o){
 			go_on = (d>0);
 		
 		}else if(p->condition_type==irdistfrontmiddle){
-			// Fill irdistances with meter data
+			// Solution one: single point
 			irsensor_transformer(odo.irsensor, irdistances);
+			printf("IRFM § Single point: %0.2f § ", irdistances[2]);
+			
+			// Solution two: Average in front
+			printf("avg three: %0.2f § ",((irdistances[2]+irdistances[3]+irdistances[1])/3));
+
+			// Solution three: average in time
+			irsensor_transformer_avg(o->avgir, irdistances); 
+			printf("avg time: %0.2f\n", irdistances[2]);
+
 			go_on = (p->ir_dist) < (irdistances[2]);
-			//printf("IR front middle %f \n", irdistances[2]); //zde
-			//printf("Desired value %f \n", p->ir_dist);
-			//printf("go_on %d \n", go_on); //zde
+
 		}else if(p->condition_type==crossingblack){
 			// Fill irdistances with meter data
 			go_on=!crossingblackline(line_intensity);
@@ -1053,38 +1076,47 @@ void update_motcon(motiontype *p, odotype *o){
 			}	
 		}
 
-
-		// Go on or stop
-		if (!go_on){
-			deaccel_flag =1;
-		}
-		// Deacceleration
-		if ((deaccel_flag) ){ 
-			if (fabs(0 - p->currentspeed) > clock_acceleration){
-				p->currentspeed -= clock_acceleration;
-			}else{ // Completely stopped
-				p->currentspeed = 0;
-				p->finished = 1;
-				deaccel_flag = 0;
+		if (ACCELERATION){
+			// Deacceleration
+			// Go on or stop
+			if (!go_on){
+				deaccel_flag = 1;
 			}
-			p->motorspeed_l = p->currentspeed;
-			p->motorspeed_r = p->currentspeed;
+			if ((deaccel_flag) ){ 
+				if (fabs(0 - p->currentspeed) > clock_acceleration){
+					p->currentspeed -= clock_acceleration;
+				}else{ // Completely stopped
+					p->currentspeed = 0;
+					p->finished = 1;
+					deaccel_flag = 0;
+				}
+				p->motorspeed_l = p->currentspeed;
+				p->motorspeed_r = p->currentspeed;
 
-		}// Keep accelerating or moving forward
-		else{ 
-			if (fabs(p->speedcmd - p->currentspeed) > clock_acceleration){ // Accelerate
-				p->currentspeed += clock_acceleration;
-			}else{ // Max speed 
+			}// Keep accelerating or moving forward
+			else{ 
+				if (fabs(p->speedcmd - p->currentspeed) > clock_acceleration){ // Accelerate
+					p->currentspeed += clock_acceleration;
+				}else{ // Max speed 
+					p->currentspeed = p->speedcmd;
+				}
+				p->motorspeed_l =p->currentspeed + dV / 2;
+				p->motorspeed_r = p->currentspeed - dV / 2;
+			}
+		}else{
+			// No acceleration
+			if (!go_on){
+					p->currentspeed = 0;
+					p->finished = 1;
+					go_on = 1;
+					p->motorspeed_l = p->currentspeed;
+					p->motorspeed_r = p->currentspeed;
+			}else{
 				p->currentspeed = p->speedcmd;
+				p->motorspeed_l = p->currentspeed + dV / 2;
+				p->motorspeed_r = p->currentspeed - dV / 2;
 			}
-			p->motorspeed_l =p->currentspeed + dV / 2;
-			p->motorspeed_r = p->currentspeed - dV / 2;
 		}
-
-		// TODO: what if there is no more line?
-		// -- follow LEFT/RIGHT will just go in a circle. as line_index will be 0 or 7.
-		// -- CG will go straight
-
 		break;
 
 	case mot_wallhug:
@@ -1241,11 +1273,29 @@ void smooth_ir_data(int irdata[5], float avgir[5]){
 
 
 void irsensor_transformer(int irdata[5], float irdistances[5]){
-	/*irdata is raw ir-data. Irdistances are not.*/	
+	/*irdata is raw ir-data. Irdistances are returned.*/		
+	irdistances[0] = (float)KA0 / ((float)irdata[0] - (float)KB0);
+	irdistances[1] = (float)KA1 / ((float)irdata[1] - (float)KB1);
+	irdistances[2] = (float)KA2 / ((float)irdata[2] - (float)KB2);
+	irdistances[3] = (float)KA3 / ((float)irdata[3] - (float)KB3);
+	irdistances[4] = (float)KA4 / ((float)irdata[4] - (float)KB4);
+	
 	for (int i = 0; i < 5; i ++){
-		
-		irdistances[i] = (float)KA / ((float)irdata[i] - (float)KB);
-		
+		if (irdistances[i] < 0){ // Sometimes, instead of giving maxdist, it gave negative values.
+			irdistances[i] = MAXIRDIST;
+		}
+	}
+}
+
+void irsensor_transformer_avg(float irdata[5], float irdistances[5]){
+	/*irdata is average ir-data. Irdistances are returned.*/	
+	irdistances[0] = (float)KA0 / ((float)irdata[0] - (float)KB0);
+	irdistances[1] = (float)KA1 / ((float)irdata[1] - (float)KB1);
+	irdistances[2] = (float)KA2 / ((float)irdata[2] - (float)KB2);
+	irdistances[3] = (float)KA3 / ((float)irdata[3] - (float)KB3);
+	irdistances[4] = (float)KA4 / ((float)irdata[4] - (float)KB4);
+	
+	for (int i = 0; i < 5; i ++){
 		if (irdistances[i] < 0){ // Sometimes, instead of giving maxdist, it gave negative values.
 			irdistances[i] = MAXIRDIST;
 		}
@@ -1253,7 +1303,7 @@ void irsensor_transformer(int irdata[5], float irdistances[5]){
 }
 
 
-void linesensor_normalizer_2(int linedata[8], float line_intensity[8]){
+void linesensor_normalizer(int linedata[8], float line_intensity[8]){
     for (int i = 0; i < 8; i ++){
         line_intensity[i] = (float)(linedata[i] - BLACKLINE) / (float)(WHITELINE - BLACKLINE); // 0.15
         
