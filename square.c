@@ -453,11 +453,7 @@ int main(){
 			*/
 
 			// Obstacle 1 works
-<<<<<<< HEAD
-			
-=======
-			cmd_followline(missions,bm,0.1,drivendist,2); //delete
->>>>>>> c882707fbf8a462d38988837add4c0bad8e6b8b2
+			//cmd_followline(missions,bm,0.1,drivendist,2); //delete
 			cmd_followline(missions,br,0.12,irdistfrontmiddle,0.2);
 			cmd_turnr(missions,0.2,180);
 			cmd_followline(missions,bm,0.1,drivendist,0.7);
@@ -483,10 +479,6 @@ int main(){
 		
 
 			// Obstacle 3 works
-<<<<<<< HEAD
-			
-=======
->>>>>>> c882707fbf8a462d38988837add4c0bad8e6b8b2
 			cmd_followline(missions,bm,0.1,foundGate,0);
 			cmd_drive(missions,drivendist,0.2,0.1);
 			cmd_followline(missions,bm,0.1,foundGate,0);
