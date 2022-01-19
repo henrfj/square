@@ -1348,7 +1348,7 @@ void linesensor_normalizer(int linedata[8], float line_intensity[8]){
         
 		if (line_intensity[i]<0.525){ // This is Black
             line_intensity[i]=0;
-        }else if (line_intensity[i]>0.67){ // White line
+        }else if (line_intensity[i]>0.64){ // White line
             line_intensity[i]=1;
         }else{
             line_intensity[i]=0.5; // Floor
