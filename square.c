@@ -441,9 +441,8 @@ int main(){
 			//cmd_followline(missions,br,0.12,drivendist,0.7);
 			cmd_followline(missions,br,0.10,irdistfrontmiddle,0.2);
 			cmd_turnr(missions, 0.1, 180);
-			cmd_followline(missions, br, 0.1, irdistfrontmiddle, 0.15);
-
-
+			cmd_followline(missions, bm, 0.1, crossingblack, 0);
+			cmd_turnr(missions, 0.1, 180);
 
 			/*
 			cmd_turnr(missions, 0.1, 90);
@@ -455,7 +454,7 @@ int main(){
 			*/
 
 			// Obstacle 2 works
-			//cmd_followline(missions, bm, 0.1, irdistfrontmiddle, 0.15);
+			cmd_followline(missions, bl, 0.1, irdistfrontmiddle, 0.15);
 			cmd_followline(missions, bm, 0.1, crossingblack, 0);
 			cmd_followline(missions, bm, 0.08, drivendist, 0.16);
 			
@@ -469,20 +468,19 @@ int main(){
 			cmd_fwd(missions, 0.2, 0.1);
 			cmd_turnr(missions,0.15,90);
 			*/
+
 			cmd_fwd(missions, -1, -0.1);
 			cmd_turnr(missions,0.10,-180);
-			cmd_followline(missions, bl, 0.15, crossingblack, 0);
+			cmd_followline(missions, bl, 0.15, drivendist, 1.5);
 
-
-
-			//cmd_followline(missions, bm, 0.15, crossingblack, 0);
+			cmd_followline(missions, bm, 0.15, crossingblack, 0);
 			cmd_fwd(missions, 0.25, 0.15);
 			cmd_turnr(missions, 0.15,90);
 			cmd_followline(missions, bm, 0.15, crossingblack, 0);
 			cmd_fwd(missions, 0.225, 0.15);
 			cmd_followline(missions, bm, 0.15, crossingblack, 0);
 		
-			/*
+			
 			// Obstacle 3 works
 			cmd_followline(missions,bm,0.1,foundGate,0);
 			cmd_drive(missions,drivendist,0.2,0.1);
@@ -557,7 +555,7 @@ int main(){
 			// Enter the garage
 			command(missions, ms_followline, drivendist, 0.35, 0.1, bm, 0, 0);
 			command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.1, bm, 0, 0);
-			*/
+			
 			/*	
 			/////////////////////    MISSIONS    ///////////////////// 
 			mission_lenght = 5;
