@@ -458,9 +458,9 @@ int main(){
 			cmd_turnr(missions, 0.15,90);
 			cmd_followline(missions, bm, 0.15, crossingblack, 0);
 			cmd_fwd(missions, 0.225, 0.15);
+			*/
 			cmd_followline(missions, bm, 0.15, crossingblack, 0);
 		
-			*/
 			// Obstacle 3 works
 			cmd_followline(missions,bm,0.1,foundGate,0);
 			cmd_drive(missions,drivendist,0.2,0.1);
