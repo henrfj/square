@@ -71,9 +71,9 @@ getoutputref(const char *sym_name, symTableElement *tab)
 #define P_GAIN_ANGLE 0.05
 
 // 
-#define WHITELINE 94 	// SIM 255, 94 for white paper, white tape was about 84
-#define GREYLINE 128 	//SIM 128, background dependent on shadow and light, was around 80
-#define BLACKLINE 54  	// SIM 0, BLACK TAPE / paper IS ABOUT 54
+#define WHITELINE 75 	// SIM 255, 94 for white paper, white tape was about 84
+#define BACKGROUND 128 	//SIM 128, background dependent on shadow and light, was around 80
+#define BLACKLINE 45  	// SIM 0, BLACK TAPE / paper IS ABOUT 54
 
 #define KA 16 //10.0 //SIM 16.0
 #define KB 76  //77.0 //SIM 76.0
@@ -1346,9 +1346,9 @@ void linesensor_normalizer(int linedata[8], float line_intensity[8]){
     for (int i = 0; i < 8; i ++){
         line_intensity[i] = (float)(linedata[i] - BLACKLINE) / (float)(WHITELINE - BLACKLINE); // 0.15
         
-		if (line_intensity[i]<0.15){ // Will accept all values between 54->60 as black
+		if (line_intensity[i]<0.1){ // Will accept all values between 54->60 as black
             line_intensity[i]=0;
-        }else if (line_intensity[i]>0.89){ // 0.7
+        }else if (line_intensity[i]>0.55){ // 0.7
             line_intensity[i]=1;
         }else{
             line_intensity[i]=0.5;
