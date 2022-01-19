@@ -439,10 +439,10 @@ int main(){
 			// Obstacle 1 works 
 			
 			//cmd_followline(missions,br,0.12,drivendist,0.7);
-			cmd_followline(missions,br,0.08,irdistfrontmiddle,0.2);
-			cmd_turnr(missions,0.15,180);
-			cmd_followline(missions,bl,0.12,crossingblack,0);
-			cmd_turnr(missions,0.15,180);
+			cmd_followline(missions,br,0.15,irdistfrontmiddle,0.2);
+			cmd_turnr(missions,0.2,180);
+			cmd_followline(missions,bl,0.15,crossingblack,0);
+			cmd_turnr(missions,0.2,180);
 			
 			// Obstacle 2 works
 			cmd_followline(missions, bl, 0.2, irdistfrontmiddle, 0.15);
@@ -563,7 +563,7 @@ int main(){
 			break;
 
 		case ms_houston:
-			if (j==2){
+			if (j==1){
 				printf("boxdist= %f\n",(fabs(odo.y_pos)+0.2+0.26));
 			}
 			if(j==mission_lenght){
