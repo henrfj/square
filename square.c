@@ -487,22 +487,23 @@ int main(){
 			command(missions, ms_turn, 0, 0, 0.10, 0, 0, -90*M_PI/180);
 			command(missions, ms_followline, drivendist, 1.1, 0.10, bm, 0, 0);
 			command(missions, ms_turn, 0, 0, 0.10, 0, 0, -180*M_PI/180);
+			*/
 			command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
-
+			
 			// Obstacle 5
-			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 90*M_PI/180);
-			cmd_drive(missions, crossingblack, 0, 0.1);
-			cmd_fwd(missions, 0.2, 0.1);
-			command(missions, ms_turn, 0, 0, 0.10, 0, 0, -90*M_PI/180);
+			//command(missions, ms_turn, 0, 0, 0.10, 0, 0, 90*M_PI/180);
+			//cmd_drive(missions, crossingblack, 0, 0.1);
+			//cmd_fwd(missions, 0.2, 0.1);
+			//command(missions, ms_turn, 0, 0, 0.10, 0, 0, -90*M_PI/180);
 
 			// Actually follow WM
-			//command(missions, ms_fwd, 0, 0, 0.1, 0, 0.45, 0);
-			//command(missions, ms_followline, crossingblack, 0, 0.05, wm, 0, 0);
-			//command(missions, ms_fwd, 0, 0, 0.1, 0, 0.17, 0);
-			//command(missions, ms_turn, 0, 0, 0.15, 0, 0, -90*M_PI/180);
+			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.45, 0);
+			command(missions, ms_followline, crossingblack, 0, 0.05, wm, 0, 0);
+			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.17, 0);
+			command(missions, ms_turn, 0, 0, 0.15, 0, 0, -90*M_PI/180);
 			
 
-			*/
+			
 			// Obstacle 6
 			// Find the garage
 			command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.1, bm, 0, 0);
@@ -1347,16 +1348,19 @@ void irsensor_transformer_avg(float irdata[5], float irdistances[5]){
 
 
 void linesensor_normalizer(int linedata[8], float line_intensity[8]){
-    float thresholds[8] = {0.6, 0.59, 0.62, 0.60, 0.69, 0.66, 0.65, 0.57}; // SMR11
+    float thresholds[8] = {0.59, 0.587, 0.61, 0.585, 0.68, 0.65, 0.625, 0.569}; // SMR11 - Papaer
 	//float thresholds[8] = {0.57, 0.59, 0.60, 0.62, 0.635, 0.635, 0.62, 0.62}; // SMR7
 	//float thresholds[8] = {0.57, 0.59, 0.60, 0.62, 0.635, 0.635, 0.62, 0.62}; // SMR5
 	/* SMR 11
-		WHITE
+		WHITE PAPER
 		63.11  61.63  63.75  61.62  75.43  70.99  67.07  59.70  
+		WHITE TAPE
+		60.72  59.93  62.05  60.31  71.74  68.30  64.57  58.45  
 		BLACK
 		44.98  46.31  45.26  45.17  45.83  45.43  45.98  45.88
 		BACKGROUND
 		58.46  56.79  58.50  57.08  65.41  62.87  61.53  56.08
+		58.48  57.80  58.19  56.51  66.44  63.03  60.74  55.82
 	
 	*/
 	/* SMR 7
