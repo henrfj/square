@@ -1344,7 +1344,7 @@ void irsensor_transformer_avg(float irdata[5], float irdistances[5]){
 
 void linesensor_normalizer(int linedata[8], float line_intensity[8]){
     //float thresholds[8] = {0.6, 0.59, 0.62, 0.60, 0.69, 0.66, 0.66, 0.58}; // SMR11
-	float thresholds[8] = {0.56, 0.58, 0.59, 0.61, 0.619, 0.619, 0.61, 0.61}; // SMR7
+	float thresholds[8] = {0.57, 0.59, 0.60, 0.62, 0.619, 0.619, 0.62, 0.62}; // SMR7
 
 	/* SMR 7
 		BACKGROUND
