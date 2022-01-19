@@ -435,7 +435,7 @@ int main(){
 				- Turn on or off simulated acceleration using ACCELERATION macro.
 			*/
 
-			cmd_followline(missions, bm, 0.05, drivendist, 1);
+			cmd_followline(missions, wm, 0.05, drivendist, 1);
 
 
 			// Obstacle 1 works 
