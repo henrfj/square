@@ -461,7 +461,7 @@ int main(){
 			cmd_turnr(missions, 0.15,90);
 			cmd_followline(missions, bm, 0.15, crossingblack, 0);
 			cmd_fwd(missions, 0.225, 0.15);
-			*/
+			
 			cmd_followline(missions, bm, 0.15, crossingblack, 0);
 		
 			// Obstacle 3 works
@@ -507,7 +507,7 @@ int main(){
 			command(missions, ms_turn, 0, 0, 0.15, 0, 0, -90*M_PI/180);
 			
 
-			
+			*/
 			// Obstacle 6
 			// Find the garage
 			command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.1, bm, 0, 0);
