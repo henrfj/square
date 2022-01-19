@@ -1343,20 +1343,29 @@ void irsensor_transformer_avg(float irdata[5], float irdistances[5]){
 
 
 void linesensor_normalizer(int linedata[8], float line_intensity[8]){
-    for (int i = 0; i < 8; i ++){
+    float thresholds[8] = {0.6, 0.59, 0.62, 0.60, 0.69, 0.66, 0.66, 0.58};
+	
+	for (int i = 0; i < 8; i ++){
         line_intensity[i] = (float)(linedata[i] - BLACKLINE) / (float)(WHITELINE - BLACKLINE); // 0.15
         
 		if (line_intensity[i]<0.525){ // This is Black
             line_intensity[i]=0;
-        }else if (line_intensity[i]>0.64){ // White line
+        }else if (line_intensity[i]>thresholds[i]){ // White line
             line_intensity[i]=1;
         }else{
             line_intensity[i]=0.5; // Floor
         }
-
+		
 		printf("%3d (%0.1f)  ", linedata[i], line_intensity[i]);
     }
+	
 	printf("\n");
+	
+	
+
+
+
+
 }
 
 int lowest_intensity(float linedata[8], char followleft){
