@@ -445,7 +445,10 @@ int main(){
 			cmd_turnr(missions, 0.1, 180);
 
 			// Obstacle 2 works
+
+			cmd_followline(missions, bm, 0.15, drivendist, 1);
 			cmd_followline(missions, bl, 0.15, irdistfrontmiddle, 0.15);
+
 			cmd_followline(missions, bm, 0.1, crossingblack, 0);
 			cmd_followline(missions, bm, 0.08, drivendist, 0.16);
 
@@ -549,7 +552,7 @@ int main(){
 
 		case ms_houston:
 			if (j==1){
-				printf("boxdist= %f\n",(fabs(odo.y_pos)+0.2+0.26));
+				printf("boxdist= %f\n",(fabs(odo.y_pos)+0.2+0.26-0.045));
 			}
 			if(j==mission_lenght){
 				printf("All missions complete\n");
@@ -1333,8 +1336,10 @@ void linesensor_normalizer(int linedata[8], float line_intensity[8]){
 		63.11  61.63  63.75  61.62  75.43  70.99  67.07  59.70  
 		WHITE TAPE
 		60.72  59.93  62.05  60.31  71.74  68.30  64.57  58.45  
-		BLACK
+		BLACK PAPER
 		44.98  46.31  45.26  45.17  45.83  45.43  45.98  45.88
+		BLACK TAPE
+		46.46  47.11  45.96  45.54  47.22  46.09  46.62  46.07
 		BACKGROUND
 		58.46  56.79  58.50  57.08  65.41  62.87  61.53  56.08
 		58.48  57.80  58.19  56.51  66.44  63.03  60.74  55.82
