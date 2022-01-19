@@ -464,7 +464,7 @@ int main(){
 			cmd_drive(missions,drivendist,0.3,0.1);
 			cmd_followline(missions,bm,0.1,foundGate,0);
 			cmd_fwd(missions, -0.02, -0.15);
-			cmd_turnr(missions, 0.1, 78);
+			cmd_turnr(missions, 0.1, 75);
 			cmd_drive(missions,drivendist, 0.3, 0.1);
 			cmd_drive(missions,dist_lida,0.25,0.1);
 			
