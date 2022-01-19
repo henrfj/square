@@ -534,9 +534,9 @@ int main(){
 			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 20*M_PI/180);
 			command(missions, ms_drive, drivendist, 0.3, 0.1, 0, 0, 0);
 			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 20*M_PI/180);
-			command(missions, ms_drive, drivendist, 0.35, 0.1, 0, 0, 0);
+			command(missions, ms_drive, drivendist, 0.25, 0.1, 0, 0, 0);
 			cmd_fwd(missions, -0.05, -0.1);
-			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 105*M_PI/180);
+			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 110*M_PI/180);
 			cmd_fwd(missions, 0.05, 0.1);
 
 			// Enter the garage
