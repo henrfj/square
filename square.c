@@ -458,7 +458,6 @@ int main(){
 			cmd_turnr(missions, 0.15,90);
 			cmd_followline(missions, bm, 0.15, crossingblack, 0);
 			cmd_fwd(missions, 0.225, 0.15);
-			*/
 			cmd_followline(missions, bm, 0.15, crossingblack, 0);
 		
 			// Obstacle 3 works
@@ -486,8 +485,8 @@ int main(){
 			cmd_fwd(missions, 0.42, 0.1);
 			// Go through the second gate
 			command(missions, ms_turn, 0, 0, 0.10, 0, 0, -90*M_PI/180);
-			command(missions, ms_followline, drivendist, 1.1, 0.15, bm, 0, 0);
-			command(missions, ms_turn, 0, 0, 0.15, 0, 0, -180*M_PI/180);
+			command(missions, ms_followline, drivendist, 1.1, 0.10, bm, 0, 0);
+			command(missions, ms_turn, 0, 0, 0.10, 0, 0, -180*M_PI/180);
 			command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
 
 			// Obstacle 5
@@ -496,13 +495,14 @@ int main(){
 			cmd_fwd(missions, 0.2, 0.1);
 			command(missions, ms_turn, 0, 0, 0.10, 0, 0, -90*M_PI/180);
 
-			/*
-			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.45, 0);
-			command(missions, ms_followline, crossingblack, 0, 0.05, wm, 0, 0);
-			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.17, 0);
-			command(missions, ms_turn, 0, 0, 0.15, 0, 0, -90*M_PI/180);
-			*/
+			// Actually follow WM
+			//command(missions, ms_fwd, 0, 0, 0.1, 0, 0.45, 0);
+			//command(missions, ms_followline, crossingblack, 0, 0.05, wm, 0, 0);
+			//command(missions, ms_fwd, 0, 0, 0.1, 0, 0.17, 0);
+			//command(missions, ms_turn, 0, 0, 0.15, 0, 0, -90*M_PI/180);
 			
+
+			*/
 			// Obstacle 6
 			// Find the garage
 			command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.1, bm, 0, 0);
@@ -528,11 +528,11 @@ int main(){
 			command(missions, ms_drive, irdistfrontleft, 0.2, 0.1, 0, 0, 0);
 			command(missions, ms_drive, drivendist, 0.2, 0.1, 0, 0, 0);
 			// Open the gate
-			command(missions, ms_drive, drivendist, 0.2, 0.1, 0, 0, 0);
-			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 15*M_PI/180);
-			command(missions, ms_drive, drivendist, 0.2, 0.1, 0, 0, 0);
+			command(missions, ms_drive, drivendist, 0.15, 0.1, 0, 0, 0);
+			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 13*M_PI/180);
+			command(missions, ms_drive, drivendist, 0.15, 0.1, 0, 0, 0);
 			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 20*M_PI/180);
-			command(missions, ms_drive, drivendist, 0.2, 0.1, 0, 0, 0);
+			command(missions, ms_drive, drivendist, 0.3, 0.1, 0, 0, 0);
 			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 20*M_PI/180);
 			command(missions, ms_drive, drivendist, 0.35, 0.1, 0, 0, 0);
 			cmd_fwd(missions, -0.05, -0.1);
