@@ -437,37 +437,17 @@ int main(){
 
 
 			// Obstacle 1 works 
-			
+			/*
 			//cmd_followline(missions,br,0.12,drivendist,0.7);
 			cmd_followline(missions,br,0.10,irdistfrontmiddle,0.2);
 			cmd_turnr(missions, 0.1, 180);
 			cmd_followline(missions, bm, 0.1, crossingblack, 0);
 			cmd_turnr(missions, 0.1, 180);
 
-			/*
-			cmd_turnr(missions, 0.1, 90);
-			cmd_drive(missions,crossingblack, 0, 0.08);
-			cmd_fwd(missions, 0.16, 0.08);
-			cmd_drive(missions,crossingblack, 0, 0.08);
-			cmd_fwd(missions, 0.2, 0.1);
-			cmd_turnr(missions,0.15,-90);
-			*/
-
 			// Obstacle 2 works
 			cmd_followline(missions, bl, 0.1, irdistfrontmiddle, 0.15);
 			cmd_followline(missions, bm, 0.1, crossingblack, 0);
 			cmd_followline(missions, bm, 0.08, drivendist, 0.16);
-			
-			//cmd_drive(missions,crossingblack, 0, 0.08);
-			//cmd_fwd(missions, 0.16, 0.08);
-			
-			/*
-			cmd_fwd(missions, -1, -0.1);
-			cmd_turnr(missions,0.10,-90);
-			cmd_drive(missions,crossingblack, 0, 0.15);
-			cmd_fwd(missions, 0.2, 0.1);
-			cmd_turnr(missions,0.15,90);
-			*/
 
 			cmd_fwd(missions, -1, -0.1);
 			cmd_turnr(missions,0.10,-180);
@@ -480,7 +460,7 @@ int main(){
 			cmd_fwd(missions, 0.225, 0.15);
 			cmd_followline(missions, bm, 0.15, crossingblack, 0);
 		
-			
+			*/
 			// Obstacle 3 works
 			cmd_followline(missions,bm,0.1,foundGate,0);
 			cmd_drive(missions,drivendist,0.2,0.1);
