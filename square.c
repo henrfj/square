@@ -446,7 +446,8 @@ int main(){
 			
 			// Obstacle 2 works
 			cmd_followline(missions, bm, 0.1, drivendist, 0.53);
-			cmd_followline(missions, bl, 0.1, irdistfrontmiddle, 0.15);
+			cmd_followline(missions, bl, 0.1, drivendist, 1.2);
+			cmd_followline(missions, bm, 0.1, irdistfrontmiddle, 0.15);
 
 			cmd_followline(missions, bm, 0.1, crossingblack, 0);
 			cmd_followline(missions, bm, 0.08, drivendist, 0.16);
