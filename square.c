@@ -443,7 +443,7 @@ int main(){
 			cmd_turnr(missions,0.15,180);
 			cmd_followline(missions,bl,0.12,crossingblack,0);
 			cmd_turnr(missions,0.15,180);
-			/*
+			
 			// Obstacle 2 works
 			cmd_followline(missions, bl, 0.2, irdistfrontmiddle, 0.15);
 			cmd_drive(missions,crossingblack, 0, 0.08);
@@ -460,7 +460,7 @@ int main(){
 			cmd_fwd(missions, 0.225, 0.15);
 			cmd_followline(missions, bm, 0.15, crossingblack, 0);
 		
-			 
+			/*
 			// Obstacle 3 works
 			cmd_followline(missions,bm,0.1,foundGate,0);
 			cmd_drive(missions,drivendist,0.2,0.1);
@@ -1365,10 +1365,10 @@ void linesensor_normalizer(int linedata[8], float line_intensity[8]){
             line_intensity[i]=0.5; // Floor
         }
 		
-		printf("%3d (%0.1f)  ", linedata[i], line_intensity[i]);
+		//printf("%3d (%0.1f)  ", linedata[i], line_intensity[i]);
     }
 	
-	printf("\n");
+	//printf("\n");
 	
 	
 
