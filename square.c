@@ -514,7 +514,7 @@ int main(){
 			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 90*M_PI/180);
 			command(missions, ms_drive, drivendist, 0.25, 0.1, 0, 0, 0);
 			// Follow the north wall
-			command(missions, ms_wallhug, irdistleft_more, 0.8, 0.1, 0, 0.25, 0);
+			command(missions, ms_wallhug, irdistleft_more, 0.8, 0.1, 0, 0.20, 0);
 			// Clear the corner
 			command(missions, ms_drive, drivendist, 0.5, 0.1, 0, 0, 0);
 			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 90*M_PI/180);
