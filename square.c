@@ -437,7 +437,6 @@ int main(){
 
 
 			// Obstacle 1 works 
-			//cmd_followline(missions,br,0.12,drivendist,0.7);
 			cmd_followline(missions,br,0.10,irdistfrontmiddle,0.2);
 			cmd_turnr(missions, 0.1, 180);
 			cmd_followline(missions, bm, 0.1, drivendist, 1);
@@ -445,7 +444,7 @@ int main(){
 			cmd_turnr(missions, 0.1, 180);
 			
 			// Obstacle 2 works
-			cmd_followline(missions, bm, 0.1, drivendist, 0.5);
+			cmd_followline(missions, bm, 0.1, drivendist, 0.53);
 			cmd_followline(missions, bl, 0.1, irdistfrontmiddle, 0.15);
 
 			cmd_followline(missions, bm, 0.1, crossingblack, 0);
@@ -538,7 +537,7 @@ int main(){
 			command(missions, ms_drive, drivendist, 0.30, 0.1, 0, 0, 0);
 			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 20*M_PI/180);
 			command(missions, ms_drive, drivendist, 0.25, 0.1, 0, 0, 0);
-			cmd_fwd(missions, -0.05, -0.1);
+			cmd_fwd(missions, -0.02, -0.1);
 			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 110*M_PI/180);
 			cmd_fwd(missions, 0.05, 0.1);
 
