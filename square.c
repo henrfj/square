@@ -449,11 +449,12 @@ int main(){
 
 
 			// Obstacle 2 works
-			cmd_followline(missions, bl, 0.1, irdistfrontmiddle, 0.15);
-			cmd_drive(missions,crossingblack, 0, 0.08);
+			cmd_followline(missions, bm, 0.1, irdistfrontmiddle, 0.15);
+			cmd_followline(missions, bm, 0.1, crossingblack, 0);
+			//cmd_drive(missions,crossingblack, 0, 0.08);
 			cmd_fwd(missions, 0.16, 0.08);
 			cmd_fwd(missions, -1, -0.15);
-			cmd_turnr(missions,0.15,-90);
+			cmd_turnr(missions,0.10,-90);
 			cmd_drive(missions,crossingblack, 0, 0.15);
 			cmd_fwd(missions, 0.2, 0.1);
 			cmd_turnr(missions,0.15,90);
