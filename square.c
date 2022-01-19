@@ -466,7 +466,7 @@ int main(){
 			cmd_drive(missions,drivendist,0.3,0.1);
 			cmd_followline(missions,bm,0.1,foundGate,0);
 			cmd_fwd(missions, -0.02, -0.15);
-			cmd_turnr(missions, 0.1, 75);
+			cmd_turnr(missions, 0.1, 78);
 			cmd_drive(missions,drivendist, 0.3, 0.1);
 			cmd_drive(missions,dist_lida,0.25,0.1);
 			
@@ -491,11 +491,17 @@ int main(){
 			command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
 
 			// Obstacle 5
+			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 90*M_PI/180);
+			cmd_drive(missions, crossingblack, 0, 0.1);
+			cmd_fwd(missions, 0.2, 0.1);
+			command(missions, ms_turn, 0, 0, 0.10, 0, 0, -90*M_PI/180);
+
+			/*
 			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.45, 0);
 			command(missions, ms_followline, crossingblack, 0, 0.05, wm, 0, 0);
 			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.17, 0);
 			command(missions, ms_turn, 0, 0, 0.15, 0, 0, -90*M_PI/180);
-
+			*/
 			
 			// Obstacle 6
 			// Find the garage
