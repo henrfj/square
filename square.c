@@ -92,7 +92,7 @@ getoutputref(const char *sym_name, symTableElement *tab)
 // Some simulation parameters
 #define MAXIRDIST 0.9 //Max distace of IR sensors (around 0.88)
 #define ACCELERATION 0 //Should we use acceleration in the code?
-#define AVG 1 // Should we average out the ir readings or not?
+#define AVG 0 // Should we average out the ir readings or not?
 #define PD 1 // Using PD to hug wall instead of P.
 
 typedef struct
@@ -440,9 +440,9 @@ int main(){
 			
 			//cmd_followline(missions,br,0.12,drivendist,0.7);
 			cmd_followline(missions,br,0.15,irdistfrontmiddle,0.2);
-			cmd_turnr(missions,0.2,180);
+			cmd_turnr(missions, 0.2, 180);
 			cmd_followline(missions,bl,0.15,crossingblack,0);
-			cmd_turnr(missions,0.2,180);
+			cmd_turnr(missions, 0.4, 180);
 			
 			// Obstacle 2 works
 			cmd_followline(missions, bl, 0.2, irdistfrontmiddle, 0.15);
