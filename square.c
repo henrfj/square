@@ -529,10 +529,10 @@ int main(){
 			command(missions, ms_drive, drivendist, 0.2, 0.1, 0, 0, 0);
 			// Open the gate
 			command(missions, ms_drive, drivendist, 0.05, 0.1, 0, 0, 0);
-			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 15*M_PI/180);
-			command(missions, ms_drive, drivendist, 0.15, 0.1, 0, 0, 0);
+			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 12*M_PI/180);
+			command(missions, ms_drive, drivendist, 0.16, 0.1, 0, 0, 0);
 			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 20*M_PI/180);
-			command(missions, ms_drive, drivendist, 0.35, 0.1, 0, 0, 0);
+			command(missions, ms_drive, drivendist, 0.30, 0.1, 0, 0, 0);
 			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 20*M_PI/180);
 			command(missions, ms_drive, drivendist, 0.25, 0.1, 0, 0, 0);
 			cmd_fwd(missions, -0.05, -0.1);
