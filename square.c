@@ -467,98 +467,106 @@ int main(){
 				- Turn on or off simulated acceleration using ACCELERATION macro.
 			*/
 
+			// Obstacle 1 works 
 			/*
-			// Obstacle 1 works
-			cmd_followline(missions,br,0.12,irdistfrontmiddle,0.2);
-			cmd_turnr(missions,0.2,180);
-			cmd_followline(missions,bm,0.1,drivendist,0.7);
-			cmd_followline(missions,bm,0.1,crossingblack,0);
-			cmd_turnr(missions,0.2,180);
+			cmd_followline(missions,br,0.12,drivendist,0.7);
+			cmd_followline(missions,bm,0.08,irdistfrontmiddle,0.2);
+			cmd_turnr(missions,0.15,180);
+			cmd_followline(missions,bl,0.12,crossingblack,0);
+			cmd_turnr(missions,0.15,180);
+			
 
 			// Obstacle 2 works
-			cmd_followline(missions, bl, 0.2, irdistfrontmiddle, 0.2);
-			cmd_fwd(missions, 0.16, 0.1);
-			cmd_drive(missions,crossingblack,0,0.1);
-			cmd_fwd(missions, 0.16, 0.1);
-			cmd_fwd(missions, -1, -0.2);
-			cmd_turnr(missions,0.2,-90);
-			cmd_drive(missions,crossingblack,0,0.2);
+			cmd_followline(missions, bl, 0.2, irdistfrontmiddle, 0.15);
+			cmd_drive(missions,crossingblack, 0, 0.08);
+			cmd_fwd(missions, 0.16, 0.08);
+			cmd_fwd(missions, -1, -0.15);
+			cmd_turnr(missions,0.15,-90);
+			cmd_drive(missions,crossingblack, 0, 0.15);
 			cmd_fwd(missions, 0.2, 0.1);
-			cmd_turnr(missions,0.2,90);
-			//cmd_drive(missions,crossingblack,0,0.2);
-			cmd_followline(missions, bm, 0.2, crossingblack, 0);
-			cmd_fwd(missions, 0.2, 0.25);
-			cmd_turnr(missions, 0.2,90);
-			cmd_followline(missions, bm, 0.2, crossingblack, 0);
-			cmd_fwd(missions, 0.225, 0.2);
-			cmd_followline(missions, bm, 0.2, crossingblack, 0);
+			cmd_turnr(missions,0.15,90);
+			cmd_followline(missions, bm, 0.15, crossingblack, 0);
+			cmd_fwd(missions, 0.25, 0.15);
+			cmd_turnr(missions, 0.15,90);
+			cmd_followline(missions, bm, 0.15, crossingblack, 0);
+			cmd_fwd(missions, 0.225, 0.15);
+			cmd_followline(missions, bm, 0.15, crossingblack, 0);
 		
-
+			 
 			// Obstacle 3 works
 			cmd_followline(missions,bm,0.1,foundGate,0);
 			cmd_drive(missions,drivendist,0.2,0.1);
 			cmd_followline(missions,bm,0.1,foundGate,0);
-			cmd_turnr(missions,0.1,90); 
+			cmd_fwd(missions, -0.02, -0.15);
+			cmd_turnr(missions,0.1,90);
 			cmd_drive(missions,dist_lida,0.25,0.1);
 			
-			*/
+			
 			// Obstacle 4
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 90*M_PI/180);
-			command(missions, ms_wallhug, irdistright_more, 0.8, 0.1, 0, 0.36, 0);
-			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.42, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
+			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 90*M_PI/180);
+			// Hug the wall
+			command(missions, ms_wallhug, irdistright_more, 0.87, 0.1, 0, 0.35, 0);
+			cmd_fwd(missions, 0.42, 0.1);
+			// Go through the first gate
+			command(missions, ms_turn, 0, 0, 0.10, 0, 0, -90*M_PI/180);
 			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.95, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
+			command(missions, ms_turn, 0, 0, 0.15, 0, 0, -90*M_PI/180);
+			// Find the wall and hug it
 			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
 			command(missions, ms_wallhug, irdistright_more, 0.8, 0.1, 0, 0.36, 0);
-			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.42, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
-			command(missions, ms_followline, drivendist, 1.1, 0.2, bm, 0, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -180*M_PI/180);
+			cmd_fwd(missions, 0.42, 0.1);
+			// Go through the second gate
+			command(missions, ms_turn, 0, 0, 0.10, 0, 0, -90*M_PI/180);
+			command(missions, ms_followline, drivendist, 1.1, 0.15, bm, 0, 0);
+			command(missions, ms_turn, 0, 0, 0.15, 0, 0, -180*M_PI/180);
 			command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
 
 			// Obstacle 5
-			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
-			command(missions, ms_followline, crossingblack, 0, 0.2, wm, 0, 0);
-			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
+			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.45, 0);
+			command(missions, ms_followline, crossingblack, 0, 0.05, wm, 0, 0);
+			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.17, 0);
+			command(missions, ms_turn, 0, 0, 0.15, 0, 0, -90*M_PI/180);
 
+			*/
 			// Obstacle 6
 			// Find the garage
-			command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.2, bm, 0, 0);
+			command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.1, bm, 0, 0);
 			// Follow the east wall
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
+			command(missions, ms_turn, 0, 0, 0.10, 0, 0, -90*M_PI/180);
 			command(missions, ms_drive, irdistleft_more, 0.8, 0.1, 0, 0, 0);
 			// Clear the corner
 			command(missions, ms_drive, drivendist, 0.5, 0.1, 0, 0, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 90*M_PI/180);
+			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 90*M_PI/180);
 			command(missions, ms_drive, drivendist, 0.25, 0.1, 0, 0, 0);
 			// Follow the north wall
-			command(missions, ms_wallhug, irdistleft_more, 0.8, 0.1, 0, 0.2, 0);
+			command(missions, ms_wallhug, irdistleft_more, 0.8, 0.1, 0, 0.25, 0);
 			// Clear the corner
 			command(missions, ms_drive, drivendist, 0.5, 0.1, 0, 0, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 90*M_PI/180);
-			command(missions, ms_drive, drivendist, 0.25, 0.1, 0, 0, 0);
+			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 90*M_PI/180);
+			command(missions, ms_drive, drivendist, 0.2, 0.1, 0, 0, 0);
 			// Follow the west wall
-			command(missions, ms_wallhug, irdistleft_more, 0.8, 0.1, 0, 0.2, 0);
+			command(missions, ms_wallhug, irdistleft_more, 0.8, 0.1, 0, 0.22, 0);
 			// Clear the corner
-			command(missions, ms_drive, drivendist, 0.4, 0.1, 0, 0, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 90*M_PI/180);
+			command(missions, ms_drive, drivendist, 0.40, 0.1, 0, 0, 0); //0.35
+			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 90*M_PI/180);
 			// Follow the south wall, get to the gate
 			command(missions, ms_drive, irdistfrontleft, 0.2, 0.1, 0, 0, 0);
 			command(missions, ms_drive, drivendist, 0.2, 0.1, 0, 0, 0);
 			// Open the gate
 			command(missions, ms_drive, drivendist, 0.2, 0.1, 0, 0, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 15*M_PI/180);
+			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 15*M_PI/180);
 			command(missions, ms_drive, drivendist, 0.2, 0.1, 0, 0, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 20*M_PI/180);
+			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 20*M_PI/180);
 			command(missions, ms_drive, drivendist, 0.2, 0.1, 0, 0, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 20*M_PI/180);
-			command(missions, ms_drive, drivendist, 0.30, 0.1, 0, 0, 0);
-			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 105*M_PI/180);
+			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 20*M_PI/180);
+			command(missions, ms_drive, drivendist, 0.35, 0.1, 0, 0, 0);
+			cmd_fwd(missions, -0.05, -0.1);
+			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 105*M_PI/180);
+			cmd_fwd(missions, 0.05, 0.1);
+
 			// Enter the garage
-			command(missions, ms_followline, drivendist, 0.35, 0.2, bm, 0, 0);
-			command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.2, bm, 0, 0);
+			command(missions, ms_followline, drivendist, 0.35, 0.1, bm, 0, 0);
+			command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.1, bm, 0, 0);
 			
 			/*	
 			/////////////////////    MISSIONS    ///////////////////// 
@@ -587,7 +595,7 @@ int main(){
 			break;
 
 		case ms_houston:
-			if (j==1){
+			if (j==2){
 				printf("boxdist= %f\n",(fabs(odo.y_pos)+0.2+0.26));
 			}
 			if(j==mission_lenght){
@@ -1151,7 +1159,7 @@ void update_motcon(motiontype *p, odotype *o){
 		go_on=0;
 		p_gain=0.2;
 		actual_dist=0;
-		d_gain = 0.8;
+		d_gain = 0.8; //0.8
 
 		if (p->condition_type==irdistright_more){
 			if (AVG){
