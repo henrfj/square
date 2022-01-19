@@ -92,7 +92,7 @@ getoutputref(const char *sym_name, symTableElement *tab)
 // Some simulation parameters
 #define MAXIRDIST 0.9 //Max distace of IR sensors (around 0.88)
 #define ACCELERATION 0 //Should we use acceleration in the code?
-#define AVG 0 // Should we average out the ir readings or not?
+#define AVG 1 // Should we average out the ir readings or not?
 #define PD 1 // Using PD to hug wall instead of P.
 
 typedef struct
@@ -1340,10 +1340,18 @@ void irsensor_transformer_avg(float irdata[5], float irdistances[5]){
 
 
 void linesensor_normalizer(int linedata[8], float line_intensity[8]){
-    //float thresholds[8] = {0.6, 0.59, 0.62, 0.60, 0.69, 0.66, 0.66, 0.58}; // SMR11
+    float thresholds[8] = {0.6, 0.59, 0.62, 0.60, 0.69, 0.66, 0.65, 0.57}; // SMR11
 	//float thresholds[8] = {0.57, 0.59, 0.60, 0.62, 0.635, 0.635, 0.62, 0.62}; // SMR7
-	float thresholds[8] = {0.57, 0.59, 0.60, 0.62, 0.635, 0.635, 0.62, 0.62}; // SMR5
-
+	//float thresholds[8] = {0.57, 0.59, 0.60, 0.62, 0.635, 0.635, 0.62, 0.62}; // SMR5
+	/* SMR 11
+		WHITE
+		63.11  61.63  63.75  61.62  75.43  70.99  67.07  59.70  
+		BLACK
+		44.98  46.31  45.26  45.17  45.83  45.43  45.98  45.88
+		BACKGROUND
+		58.46  56.79  58.50  57.08  65.41  62.87  61.53  56.08
+	
+	*/
 	/* SMR 7
 		BACKGROUND
 		54.42  56.25  57.56  58.25  59.04  60.15  59.96  59.34
@@ -1363,7 +1371,7 @@ void linesensor_normalizer(int linedata[8], float line_intensity[8]){
 	for (int i = 0; i < 8; i ++){
         line_intensity[i] = (float)(linedata[i] - BLACKLINE) / (float)(WHITELINE - BLACKLINE); // 0.15
         
-		if (line_intensity[i]<0.65){ // SMR11/7: 0.525, SMR5: 0.65
+		if (line_intensity[i]<0.525){ // SMR11/7: 0.525, SMR5: 0.65
             line_intensity[i]=0;
         }else if (line_intensity[i]>thresholds[i]){ // White line
             line_intensity[i]=1;
