@@ -1343,12 +1343,24 @@ void irsensor_transformer_avg(float irdata[5], float irdistances[5]){
 
 
 void linesensor_normalizer(int linedata[8], float line_intensity[8]){
-    float thresholds[8] = {0.6, 0.59, 0.62, 0.60, 0.69, 0.66, 0.66, 0.58};
-	
+    //float thresholds[8] = {0.6, 0.59, 0.62, 0.60, 0.69, 0.66, 0.66, 0.58}; // SMR11
+	float thresholds[8] = {0.57, 0.59, 0.60, 0.62, 0.635, 0.635, 0.62, 0.62}; // SMR7
+
+	/* SMR 7
+		BACKGROUND
+		54.42  56.25  57.56  58.25  59.04  60.15  59.96  59.34
+
+		BLACK
+		47.60  47.52  49.03  48.48  48.71  48.96  48.92  49.60
+
+		WHITE
+		59.59  63.22  64.86  66.10  67.19  67.56  65.52  64.74
+	*/
+
 	for (int i = 0; i < 8; i ++){
         line_intensity[i] = (float)(linedata[i] - BLACKLINE) / (float)(WHITELINE - BLACKLINE); // 0.15
         
-		if (line_intensity[i]<0.525){ // This is Black
+		if (line_intensity[i]<0.525){ // This is Black. SMR11: 0.525
             line_intensity[i]=0;
         }else if (line_intensity[i]>thresholds[i]){ // White line
             line_intensity[i]=1;
