@@ -437,7 +437,6 @@ int main(){
 
 
 			// Obstacle 1 works 
-			/*
 			//cmd_followline(missions,br,0.12,drivendist,0.7);
 			cmd_followline(missions,br,0.10,irdistfrontmiddle,0.2);
 			cmd_turnr(missions, 0.1, 180);
@@ -487,7 +486,7 @@ int main(){
 			command(missions, ms_turn, 0, 0, 0.10, 0, 0, -90*M_PI/180);
 			command(missions, ms_followline, drivendist, 1.1, 0.10, bm, 0, 0);
 			command(missions, ms_turn, 0, 0, 0.10, 0, 0, -180*M_PI/180);
-			*/
+			
 			command(missions, ms_followline, crossingblack, 0, 0.2, bm, 0, 0);
 			
 			// Obstacle 5
@@ -543,30 +542,7 @@ int main(){
 			// Enter the garage
 			command(missions, ms_followline, drivendist, 0.35, 0.1, bm, 0, 0);
 			command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.1, bm, 0, 0);
-			
-			/*	
-			/////////////////////    MISSIONS    ///////////////////// 
-			mission_lenght = 5;
-			// Obstacle 5:
-			// followline "bm" @v 0.2 : ($crossingblackline==1)
-			//cmd_followline(missions, bm, 0.2, crossingblack, 0);
-			// fwd 0.1 @v0.2
-			//cmd_fwd(missions, 0.2, 0.1);
-			// followline "wm" @v 0.2 : ($crossingblackline==1)
-			//cmd_followline(missions, wm, 0.2, crossingblack, 0);
-			// fwd 0.1 @v0.2
-			//cmd_fwd(missions, 0.2, 0.1);
-			// turnr 0.10 30
-			cmd_turnr(missions, 0.2, -90); //only degrees angle
-			*/
 
-			//Obstacle 6:
-			// followline "bm" @v 0.1 : ($irdistfrontmiddle<0.2)
-			//cmd_followline(missions, bm, 0.1, irdistfrontmiddle, 0.2);
-			//cmd_turnr(missions, 0.2, -90);
-			//command(missions, ms_wallhug, irdistleft_more, 0.8, 0.1, 0, 0.3, 0);
-			//cmd_turnr(missions, 0.2, 90);
-			/////////////////    END OF MISSIONS    /////////////////
 			mission_lenght = update_command_no();
 			break;
 
