@@ -435,7 +435,6 @@ int main(){
 				- Turn on or off simulated acceleration using ACCELERATION macro.
 			*/
 
-			/*
 			// Obstacle 1 works 
 			cmd_followline(missions,br,0.10,irdistfrontmiddle,0.2);
 			cmd_turnr(missions, 0.1, 180);
@@ -507,7 +506,7 @@ int main(){
 			command(missions, ms_turn, 0, 0, 0.15, 0, 0, -90*M_PI/180);
 			
 
-			*/
+			
 			// Obstacle 6
 			// Find the garage
 			command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.1, bm, 0, 0);
