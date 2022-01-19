@@ -439,8 +439,9 @@ int main(){
 			// Obstacle 1 works 
 			cmd_followline(missions,br,0.10,irdistfrontmiddle,0.2);
 			cmd_turnr(missions, 0.1, 180);
-			cmd_followline(missions, bm, 0.1, drivendist, 1.2);
-			cmd_followline(missions, bm, 0.1, crossingblack, 0);
+			//cmd_followline(missions, bm, 0.1, drivendist, 1.2);
+			//cmd_followline(missions, bm, 0.1, crossingblack, 0);
+			cmd_followline(missions, bl, 0.1, crossingblack,0);
 			cmd_turnr(missions, 0.1, 180);
 			
 			// Obstacle 2 works
