@@ -65,15 +65,15 @@ getoutputref(const char *sym_name, symTableElement *tab)
 #define WHEEL_DIAMETER 0.06522 /* m */
 #define WHEEL_SEPARATION 0.26  /* m */
 #define DELTA_M (M_PI * WHEEL_DIAMETER / 2000)
-#define ROBOTPORT 8000 //8000//24902 //8000
+#define ROBOTPORT 24902 //8000//24902 //8000
 #define MAXINT 65536
 #define TIMETIC 0.01
 #define P_GAIN_ANGLE 0.05
 
 // 
-#define WHITELINE 255 	// SIM 255, 94 for white paper, white tape was about 84
+#define WHITELINE 94 	// SIM 255, 94 for white paper, white tape was about 84
 #define GREYLINE 128 	//SIM 128, background dependent on shadow and light, was around 80
-#define BLACKLINE 0  	// SIM 0, BLACK TAPE / paper IS ABOUT 54
+#define BLACKLINE 54  	// SIM 0, BLACK TAPE / paper IS ABOUT 54
 
 #define KA 16 //10.0 //SIM 16.0
 #define KB 76  //77.0 //SIM 76.0
@@ -260,38 +260,6 @@ enum linetypes {
 };
 
 
-// void write_log(double log[MAXINT][7]) //here here
-// {
-//     FILE * fPtr;
-//     fPtr = fopen("/home/smr/offline/square/log.dat", "w");
-//     if(fPtr == NULL)
-//     {
-//         printf("Unable to create file.\n"); // File not created hence exit
-//     }
-    
-//     for(int i = 0; i < MAXINT; i++){
-//       fprintf(fPtr,"%f %f %f %f %f %f %f\n",
-// 	   log[i][0],log[i][1],log[i][2], log[i][3], log[i][4], log[i][5], log[i][6]); // Write data to file
-//    }
-//     fclose(fPtr); // Close file to save file data
-// }
-
-
-// void write_laser_log(double laserpar[10]){
-// 	//TODO clear the file before run.
-//     FILE * fPtr;
-//     fPtr = fopen("/home/smr/offline/square/laserpar.dat", "a"); //a for appending not overwriting
-//     if(fPtr == NULL)
-//     {
-//         printf("Unable to create file.\n"); // File not created hence exit
-//     }
-//     fprintf(fPtr,"%f %f %f %f %f %f %f %f %f %f\n",
-// 	   laserpar[0], laserpar[1], laserpar[2], laserpar[3], laserpar[4], laserpar[5], laserpar[6],
-// 	    laserpar[7], laserpar[8], laserpar[9]); // Write data to file
-//     fclose(fPtr); // Close file to save file data
-// }
-
-
 int main(){
 	int running, arg, time = 0;
 	double dist = 0, angle = 0, speed = 0, condition_param = 0;
@@ -467,6 +435,9 @@ int main(){
 				- Turn on or off simulated acceleration using ACCELERATION macro.
 			*/
 
+			cmd_followline(missions, bm, 0.1, drivendist, 1);
+
+
 			// Obstacle 1 works 
 			/*
 			cmd_followline(missions,br,0.12,drivendist,0.7);
@@ -527,7 +498,7 @@ int main(){
 			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.17, 0);
 			command(missions, ms_turn, 0, 0, 0.15, 0, 0, -90*M_PI/180);
 
-			*/
+			
 			// Obstacle 6
 			// Find the garage
 			command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.1, bm, 0, 0);
@@ -567,7 +538,7 @@ int main(){
 			// Enter the garage
 			command(missions, ms_followline, drivendist, 0.35, 0.1, bm, 0, 0);
 			command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.1, bm, 0, 0);
-			
+			*/
 			/*	
 			/////////////////////    MISSIONS    ///////////////////// 
 			mission_lenght = 5;
@@ -1383,9 +1354,9 @@ void linesensor_normalizer(int linedata[8], float line_intensity[8]){
             line_intensity[i]=0.5;
         }
 
-		//printf("%3d (%0.1f)  ", linedata[i], line_intensity[i]);
+		printf("%3d (%0.1f)  ", linedata[i], line_intensity[i]);
     }
-	//printf("\n");
+	printf("\n");
 }
 
 int lowest_intensity(float linedata[8], char followleft){
