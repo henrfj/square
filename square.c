@@ -80,12 +80,12 @@ getoutputref(const char *sym_name, symTableElement *tab)
 
 #define KA0 16 //LEFT
 #define KB0 76 //LEFT
-#define KA1 16 //FRONTLEFT
-#define KB1 76 //FRONTLEFT
-#define KA2 16 //FRONTMIDDLE
-#define KB2 76 //FRONTMIDDLE
-#define KA3 16 //FRONTRIGHT
-#define KB3 76 //FRONTRIGHT
+#define KA1 16.89 //FRONTLEFT
+#define KB1 61.49 //FRONTLEFT
+#define KA2 16.97 //FRONTMIDDLE
+#define KB2 54.93 //FRONTMIDDLE
+#define KA3 16.65 //FRONTRIGHT
+#define KB3 69.08 //FRONTRIGHT
 #define KA4 16 //RIGHT
 #define KB4 76 //RIGHT
 
@@ -435,18 +435,15 @@ int main(){
 				- Turn on or off simulated acceleration using ACCELERATION macro.
 			*/
 
-			cmd_followline(missions, wm, 0.05, drivendist, 1);
-
 
 			// Obstacle 1 works 
-			/*
-			cmd_followline(missions,br,0.12,drivendist,0.7);
-			cmd_followline(missions,bm,0.08,irdistfrontmiddle,0.2);
+			
+			//cmd_followline(missions,br,0.12,drivendist,0.7);
+			cmd_followline(missions,br,0.08,irdistfrontmiddle,0.2);
 			cmd_turnr(missions,0.15,180);
 			cmd_followline(missions,bl,0.12,crossingblack,0);
 			cmd_turnr(missions,0.15,180);
-			
-
+			/*
 			// Obstacle 2 works
 			cmd_followline(missions, bl, 0.2, irdistfrontmiddle, 0.15);
 			cmd_drive(missions,crossingblack, 0, 0.08);
@@ -1344,7 +1341,7 @@ void irsensor_transformer_avg(float irdata[5], float irdistances[5]){
 
 void linesensor_normalizer(int linedata[8], float line_intensity[8]){
     //float thresholds[8] = {0.6, 0.59, 0.62, 0.60, 0.69, 0.66, 0.66, 0.58}; // SMR11
-	float thresholds[8] = {0.57, 0.59, 0.60, 0.62, 0.619, 0.619, 0.62, 0.62}; // SMR7
+	float thresholds[8] = {0.57, 0.59, 0.60, 0.62, 0.635, 0.635, 0.62, 0.62}; // SMR7
 
 	/* SMR 7
 		BACKGROUND
