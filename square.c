@@ -439,13 +439,13 @@ int main(){
 			// Obstacle 1 works 
 			
 			//cmd_followline(missions,br,0.12,drivendist,0.7);
-			cmd_followline(missions,br,0.15,irdistfrontmiddle,0.2);
-			cmd_turnr(missions, 0.2, 180);
-			cmd_followline(missions,bl,0.15,crossingblack,0);
-			cmd_turnr(missions, 0.4, 180);
+			cmd_followline(missions,br,0.10,irdistfrontmiddle,0.2);
+			cmd_turnr(missions, 0.1, 180);
+			cmd_followline(missions,bl,0.10,crossingblack,0);
+			cmd_turnr(missions, 0.1, 180);
 			
 			// Obstacle 2 works
-			cmd_followline(missions, bl, 0.2, irdistfrontmiddle, 0.15);
+			cmd_followline(missions, bl, 0.1, irdistfrontmiddle, 0.15);
 			cmd_drive(missions,crossingblack, 0, 0.08);
 			cmd_fwd(missions, 0.16, 0.08);
 			cmd_fwd(missions, -1, -0.15);
