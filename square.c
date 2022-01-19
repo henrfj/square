@@ -71,9 +71,9 @@ getoutputref(const char *sym_name, symTableElement *tab)
 #define P_GAIN_ANGLE 0.05
 
 // 
-#define WHITELINE 75 	// SIM 255, 94 for white paper, white tape was about 84
+#define WHITELINE 100 	// SIM 255, 94 for white paper, white tape was about 84
 #define BACKGROUND 128 	//SIM 128, background dependent on shadow and light, was around 80
-#define BLACKLINE 45  	// SIM 0, BLACK TAPE / paper IS ABOUT 54
+#define BLACKLINE 0  	// SIM 0, BLACK TAPE / paper IS ABOUT 54
 
 #define KA 16 //10.0 //SIM 16.0
 #define KB 76  //77.0 //SIM 76.0
@@ -435,7 +435,7 @@ int main(){
 				- Turn on or off simulated acceleration using ACCELERATION macro.
 			*/
 
-			cmd_followline(missions, bm, 0.1, drivendist, 1);
+			cmd_followline(missions, bm, 0.05, drivendist, 1);
 
 
 			// Obstacle 1 works 
@@ -1346,12 +1346,12 @@ void linesensor_normalizer(int linedata[8], float line_intensity[8]){
     for (int i = 0; i < 8; i ++){
         line_intensity[i] = (float)(linedata[i] - BLACKLINE) / (float)(WHITELINE - BLACKLINE); // 0.15
         
-		if (line_intensity[i]<0.2){ // This is floor
-            line_intensity[i]=0.5;
-        }else if (line_intensity[i]>0.55){ // White line
+		if (line_intensity[i]<0.525){ // This is Black
+            line_intensity[i]=0;
+        }else if (line_intensity[i]>1){ // White line
             line_intensity[i]=1;
         }else{
-            line_intensity[i]=1; // blackline
+            line_intensity[i]=0.5; // Floor
         }
 
 		printf("%3d (%0.1f)  ", linedata[i], line_intensity[i]);
