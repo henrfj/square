@@ -1346,12 +1346,12 @@ void linesensor_normalizer(int linedata[8], float line_intensity[8]){
     for (int i = 0; i < 8; i ++){
         line_intensity[i] = (float)(linedata[i] - BLACKLINE) / (float)(WHITELINE - BLACKLINE); // 0.15
         
-		if (line_intensity[i]<0.1){ // Will accept all values between 54->60 as black
-            line_intensity[i]=0;
-        }else if (line_intensity[i]>0.55){ // 0.7
+		if (line_intensity[i]<0.2){ // This is floor
+            line_intensity[i]=0.5;
+        }else if (line_intensity[i]>0.55){ // White line
             line_intensity[i]=1;
         }else{
-            line_intensity[i]=0.5;
+            line_intensity[i]=1; // blackline
         }
 
 		printf("%3d (%0.1f)  ", linedata[i], line_intensity[i]);
