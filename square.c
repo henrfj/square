@@ -89,6 +89,7 @@ getoutputref(const char *sym_name, symTableElement *tab)
 #define KA4 16 //RIGHT
 #define KB4 76 //RIGHT
 
+// Some simulation parameters
 #define MAXIRDIST 0.9 //Max distace of IR sensors (around 0.88)
 #define ACCELERATION 1 //Should we use acceleration in the code?
 #define AVG 1 // Should we average out the ir readings or not?
@@ -1154,8 +1155,9 @@ void update_motcon(motiontype *p, odotype *o){
 
 		if (p->condition_type==irdistright_more){
 			if (AVG){
+				irsensor_transformer(odo.irsensor, irdistances);
+				go_on = (p->ir_dist) > (irdistances[4]);
 				irsensor_transformer_avg(o->avgir, irdistances);
-				go_on = (p->ir_dist) > (irdistances[4]); 
 			}else{
 				irsensor_transformer(odo.irsensor, irdistances);
 				go_on = (p->ir_dist) > (irdistances[4]); 
@@ -1171,8 +1173,9 @@ void update_motcon(motiontype *p, odotype *o){
 
 		}else if(p->condition_type==irdistleft_more){
 			if (AVG){
-				irsensor_transformer_avg(o->avgir, irdistances);
+				irsensor_transformer(odo.irsensor, irdistances);
 				go_on = (p->ir_dist) > (irdistances[0]); 
+				irsensor_transformer_avg(o->avgir, irdistances);
 			}else{
 				irsensor_transformer(odo.irsensor, irdistances);
 				go_on = (p->ir_dist) > (irdistances[0]); 
