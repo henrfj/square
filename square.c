@@ -91,7 +91,7 @@ getoutputref(const char *sym_name, symTableElement *tab)
 
 // Some simulation parameters
 #define MAXIRDIST 0.9 //Max distace of IR sensors (around 0.88)
-#define ACCELERATION 1 //Should we use acceleration in the code?
+#define ACCELERATION 0 //Should we use acceleration in the code?
 #define AVG 1 // Should we average out the ir readings or not?
 #define PD 1 // Using PD to hug wall instead of P.
 
