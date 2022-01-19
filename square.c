@@ -69,6 +69,8 @@ getoutputref(const char *sym_name, symTableElement *tab)
 #define MAXINT 65536
 #define TIMETIC 0.01
 #define P_GAIN_ANGLE 0.05
+
+// 
 #define WHITELINE 255 	// SIM 255, 94 for white paper, white tape was about 84
 #define GREYLINE 128 	//SIM 128, background dependent on shadow and light, was around 80
 #define BLACKLINE 0  	// SIM 0, BLACK TAPE / paper IS ABOUT 54
@@ -88,7 +90,9 @@ getoutputref(const char *sym_name, symTableElement *tab)
 #define KB4 76 //RIGHT
 
 #define MAXIRDIST 0.9 //Max distace of IR sensors (around 0.88)
-#define ACCELERATION 0 //Should we use acceleration in the code?
+#define ACCELERATION 1 //Should we use acceleration in the code?
+#define AVG 1 // Should we average out the ir readings or not?
+
 
 typedef struct
 {							 //input signals
@@ -440,30 +444,9 @@ int main(){
 		memcpy(odo.linesensor, linesensor->data, sizeof(odo.linesensor));
 		memcpy(odo.irsensor, irsensor->data, sizeof(odo.irsensor));
 		smooth_ir_data(odo.irsensor, odo.avgir);
-
-		//Test
-		/*
-		float ir_distances[5];
-		irsensor_transformer(odo.irsensor, ir_distances);
-		for (int i = 0; i<5; i++){
-			printf("RAW: %4d\t AVG: %0.1f\t DIST %0.1f\t ", odo.irsensor[i], odo.avgir[i], ir_distances[i]);
-			printf("\n");
-		}
-		printf("\n");
-		*/
 		
 		// Execute ODOMETRY
 		update_odo(&odo);
-
-		/*
-		float irdistances[5];
-
-		irsensor_transformer(odo.irsensor, irdistances);
-		for (int i=0; i<5; i++){
-			printf("%d(%f)\t", odo.irsensor[i], irdistances[i]);
-		}
-		printf("\n");
-		*/
 
 		/****************************************
 		/ mission statemachine   
@@ -482,8 +465,8 @@ int main(){
 				- Turn on or off simulated acceleration using ACCELERATION macro.
 			*/
 
-			// Obstacle 1 works
 			/*
+			// Obstacle 1 works
 			cmd_followline(missions,br,0.12,irdistfrontmiddle,0.2);
 			cmd_turnr(missions,0.2,180);
 			cmd_followline(missions,bm,0.1,drivendist,0.7);
@@ -500,7 +483,8 @@ int main(){
 			cmd_drive(missions,crossingblack,0,0.2);
 			cmd_fwd(missions, 0.2, 0.1);
 			cmd_turnr(missions,0.2,90);
-			cmd_drive(missions,crossingblack,0,0.2);
+			//cmd_drive(missions,crossingblack,0,0.2);
+			cmd_followline(missions, bm, 0.2, crossingblack, 0);
 			cmd_fwd(missions, 0.2, 0.25);
 			cmd_turnr(missions, 0.2,90);
 			cmd_followline(missions, bm, 0.2, crossingblack, 0);
@@ -515,7 +499,7 @@ int main(){
 			cmd_turnr(missions,0.1,90); 
 			cmd_drive(missions,dist_lida,0.25,0.1);
 			
-
+			*/
 			// Obstacle 4
 			command(missions, ms_turn, 0, 0, 0.2, 0, 0, 90*M_PI/180);
 			command(missions, ms_wallhug, irdistright_more, 0.8, 0.1, 0, 0.36, 0);
@@ -536,8 +520,6 @@ int main(){
 			command(missions, ms_followline, crossingblack, 0, 0.2, wm, 0, 0);
 			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.2, 0);
 			command(missions, ms_turn, 0, 0, 0.2, 0, 0, -90*M_PI/180);
-			
-			*/
 
 			// Obstacle 6
 			// Find the garage
@@ -575,7 +557,6 @@ int main(){
 			// Enter the garage
 			command(missions, ms_followline, drivendist, 0.35, 0.2, bm, 0, 0);
 			command(missions, ms_followline, irdistfrontmiddle, 0.2, 0.2, bm, 0, 0);
-			
 			
 			/*	
 			/////////////////////    MISSIONS    ///////////////////// 
@@ -926,21 +907,37 @@ void update_motcon(motiontype *p, odotype *o){
 			d = p->dist - driven_dist; 						// remaining distance
 
 		}else if(p->condition_type==irdistfrontmiddle){
-			irsensor_transformer(odo.irsensor, irdistances);
+			if (AVG){
+				irsensor_transformer_avg(o->avgir, irdistances);
+			}else{
+				irsensor_transformer(odo.irsensor, irdistances);
+			}
 			d = irdistances[2] - p->ir_dist;
 
 		}else if(p->condition_type==irdistfrontleft){
-			irsensor_transformer(odo.irsensor, irdistances);
+			if (AVG){
+				irsensor_transformer_avg(o->avgir, irdistances);
+			}else{
+				irsensor_transformer(odo.irsensor, irdistances);
+			}			
 			d = irdistances[1] - p->ir_dist; 
 
 		}else if(p->condition_type==irdistright_more){
-			irsensor_transformer(odo.irsensor, irdistances);
+			if (AVG){
+				irsensor_transformer_avg(o->avgir, irdistances);
+			}else{
+				irsensor_transformer(odo.irsensor, irdistances);
+			}
 			if (irdistances[4] > p->ir_dist){
 				deaccel_flag=1;
 			}
 
 		}else if(p->condition_type==irdistleft_more){
-			irsensor_transformer(odo.irsensor, irdistances);
+			if (AVG){
+				irsensor_transformer_avg(o->avgir, irdistances);
+			}else{
+				irsensor_transformer(odo.irsensor, irdistances);
+			}
 			if (irdistances[0] > p->ir_dist){
 				deaccel_flag=1;
 			}
@@ -1066,15 +1063,19 @@ void update_motcon(motiontype *p, odotype *o){
 			go_on = (d>0);
 		
 		}else if(p->condition_type==irdistfrontmiddle){
+			if (AVG){
+				irsensor_transformer_avg(o->avgir, irdistances);
+				go_on = (p->ir_dist) < (irdistances[2]); 
+			}else{
+				irsensor_transformer(odo.irsensor, irdistances);
+				go_on = (p->ir_dist) < (irdistances[2]); 
+			}
+			
 			// Solution one: single point
-			irsensor_transformer(odo.irsensor, irdistances);
 			//printf("IRFM § Single point: %0.2f § ", irdistances[2]);
-			go_on = (p->ir_dist) < (irdistances[2]);
-
 			// Solution two: Average in front
 			//printf("avg three: %0.2f § ",((irdistances[2]+irdistances[3]+irdistances[1])/3));
 			// Solution three: average in time
-			irsensor_transformer_avg(o->avgir, irdistances); 
 			//printf("avg time: %0.2f\n", irdistances[2]);
 			
 
@@ -1149,21 +1150,30 @@ void update_motcon(motiontype *p, odotype *o){
 		actual_dist=0;
 
 		if (p->condition_type==irdistright_more){
-			irsensor_transformer(odo.irsensor, irdistances);
-			go_on = (p->ir_dist) > (irdistances[4]);
+			if (AVG){
+				irsensor_transformer_avg(o->avgir, irdistances);
+				go_on = (p->ir_dist) > (irdistances[4]); 
+			}else{
+				irsensor_transformer(odo.irsensor, irdistances);
+				go_on = (p->ir_dist) > (irdistances[4]); 
+			}
 
 			actual_dist = irdistances[4] * sin(M_PI/2 - (fabs(o->theta - p->startangle)));
+			printf("dV:%f\n", dV);
 			dV = hug_gain * (p->dist - actual_dist);
-			//printf("Current angle: %f\t Startangle: %f \t Actual dist: %f \t theta3 %f \tdV: %f\n", o->theta, p->startangle, actual_dist, M_PI/2 - (o->theta - p->startangle), dV);
 
 
 		}else if(p->condition_type==irdistleft_more){
-			irsensor_transformer(odo.irsensor, irdistances);
-			go_on = (p->ir_dist) > (irdistances[0]);
+			if (AVG){
+				irsensor_transformer_avg(o->avgir, irdistances);
+				go_on = (p->ir_dist) > (irdistances[0]); 
+			}else{
+				irsensor_transformer(odo.irsensor, irdistances);
+				go_on = (p->ir_dist) > (irdistances[0]); 
+			}
 
 			actual_dist = irdistances[0] * sin(M_PI/2 - (fabs(o->theta - p->startangle)));
 			dV = -hug_gain * (p->dist - actual_dist);
-			//printf("Desired dist %f\t Measured left: %f \t Actual dist: %f \t dV: %f\n", p->dist, irdistances[0], actual_dist, dV);
 
 
 		}
