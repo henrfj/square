@@ -92,7 +92,7 @@ getoutputref(const char *sym_name, symTableElement *tab)
 #define MAXIRDIST 0.9 //Max distace of IR sensors (around 0.88)
 #define ACCELERATION 1 //Should we use acceleration in the code?
 #define AVG 1 // Should we average out the ir readings or not?
-
+#define PD 1 // Using PD to hug wall instead of P.
 
 typedef struct
 {							 //input signals
@@ -147,6 +147,7 @@ typedef struct
 	int laser_index;
 	//x dist to gate
 	double lenghtToGate; 
+	double prevdV; // For the PD controller
 } motiontype;
 
 void reset_odo(odotype *p);
@@ -778,7 +779,8 @@ void update_motcon(motiontype *p, odotype *o){
 	float irdistances[5];
 	float line_intensity[8];
 	char go_on;
-	float hug_gain;
+	float p_gain;
+	float d_gain;
 	float actual_dist;
 	// So the motor voltage is still operational IRL
 	double sm = 0.01;
@@ -1146,8 +1148,9 @@ void update_motcon(motiontype *p, odotype *o){
 		/* Hug a wall at a given distance */
 		// Calulcate stop condition.
 		go_on=0;
-		hug_gain=0.2;
+		p_gain=0.2;
 		actual_dist=0;
+		d_gain = 0.8;
 
 		if (p->condition_type==irdistright_more){
 			if (AVG){
@@ -1159,9 +1162,12 @@ void update_motcon(motiontype *p, odotype *o){
 			}
 
 			actual_dist = irdistances[4] * sin(M_PI/2 - (fabs(o->theta - p->startangle)));
-			printf("dV:%f\n", dV);
-			dV = hug_gain * (p->dist - actual_dist);
-
+			dV = p_gain * (p->dist - actual_dist); //P-controller
+			if (PD){
+				if (dV>0){ dV -= d_gain*fabs(dV-p->prevdV); }
+				else if (dV<0){ dV += d_gain*fabs(dV-p->prevdV); }
+				p->prevdV = dV;
+			}
 
 		}else if(p->condition_type==irdistleft_more){
 			if (AVG){
@@ -1173,8 +1179,12 @@ void update_motcon(motiontype *p, odotype *o){
 			}
 
 			actual_dist = irdistances[0] * sin(M_PI/2 - (fabs(o->theta - p->startangle)));
-			dV = -hug_gain * (p->dist - actual_dist);
-
+			dV = -p_gain * (p->dist - actual_dist);
+			if (PD){
+				if (dV>0){ dV -= d_gain*fabs(dV-p->prevdV); }
+				else if (dV<0){ dV += d_gain*fabs(dV-p->prevdV); }
+				p->prevdV = dV;
+			}
 
 		}
 
