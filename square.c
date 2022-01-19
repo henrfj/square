@@ -435,7 +435,7 @@ int main(){
 				- Turn on or off simulated acceleration using ACCELERATION macro.
 			*/
 
-
+			/*
 			// Obstacle 1 works 
 			cmd_followline(missions,br,0.10,irdistfrontmiddle,0.2);
 			cmd_turnr(missions, 0.1, 180);
@@ -461,6 +461,7 @@ int main(){
 			cmd_turnr(missions, 0.15,90);
 			cmd_followline(missions, bm, 0.15, crossingblack, 0);
 			cmd_fwd(missions, 0.225, 0.15);
+			*/
 			cmd_followline(missions, bm, 0.15, crossingblack, 0);
 		
 			// Obstacle 3 works
@@ -477,7 +478,7 @@ int main(){
 			command(missions, ms_turn, 0, 0, 0.10, 0, 0, 90*M_PI/180);
 			// Hug the wall
 			command(missions, ms_wallhug, irdistright_more, 0.87, 0.1, 0, 0.35, 0);
-			cmd_fwd(missions, 0.42, 0.1);
+			cmd_fwd(missions, 0.40, 0.1); // 0.42
 			// Go through the first gate
 			command(missions, ms_turn, 0, 0, 0.10, 0, 0, -90*M_PI/180);
 			command(missions, ms_fwd, 0, 0, 0.1, 0, 0.95, 0);
