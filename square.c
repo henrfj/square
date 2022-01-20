@@ -1328,7 +1328,7 @@ void irsensor_transformer_avg(float irdata[5], float irdistances[5]){
 
 
 void linesensor_normalizer(int linedata[8], float line_intensity[8]){
-    float thresholds[8] = {0.59, 0.587, 0.61, 0.585, 0.68, 0.65, 0.625, 0.569}; // SMR11 - Papaer
+    float thresholds[8] = {0.59, 0.587, 0.61, 0.585, 0.68, 0.65, 0.620, 0.57}; // SMR11 - Paper
 	//float thresholds[8] = {0.57, 0.59, 0.60, 0.62, 0.635, 0.635, 0.62, 0.62}; // SMR7
 	//float thresholds[8] = {0.57, 0.59, 0.60, 0.62, 0.635, 0.635, 0.62, 0.62}; // SMR5
 	/* SMR 11
@@ -1343,6 +1343,14 @@ void linesensor_normalizer(int linedata[8], float line_intensity[8]){
 		BACKGROUND
 		58.46  56.79  58.50  57.08  65.41  62.87  61.53  56.08
 		58.48  57.80  58.19  56.51  66.44  63.03  60.74  55.82
+		FINAL DAY!
+		WHITE TAPE
+		60.88  60.01  61.89  60.16  70.87  67.95  63.80  58.07  
+		BLACK TAPE
+		45.51  46.64  45.19  44.90  46.82  45.68  45.86  45.15
+		BACKGROUND
+		55.47  55.93  56.92  54.94  62.73  60.24  58.39  53.51  
+		55.44  55.94  56.82  55.08  62.82  60.24  58.33  53.63
 	
 	*/
 	/* SMR 7
@@ -1364,7 +1372,7 @@ void linesensor_normalizer(int linedata[8], float line_intensity[8]){
 	for (int i = 0; i < 8; i ++){
         line_intensity[i] = (float)(linedata[i] - BLACKLINE) / (float)(WHITELINE - BLACKLINE); // 0.15
         
-		if (line_intensity[i]<0.525){ // SMR11/7: 0.525, SMR5: 0.65
+		if (line_intensity[i]<0.515){ // SMR11/7: 0.525, SMR5: 0.65
             line_intensity[i]=0;
         }else if (line_intensity[i]>thresholds[i]){ // White line
             line_intensity[i]=1;
